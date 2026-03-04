@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM - 激励PK系统 交互原型</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #001529;
+            --sidebar-width: 220px;
+            --primary-blue: #1890ff;
+            --bg-gray: #f0f2f5;
+            --header-height: 50px;
+            --pk-full-height: 60px;
+            --pk-current-height: 60px;
+            --success: #52c41a;
+            --warning: #faad14;
+            --danger: #ff4d4f;
+            --orange: #fa8c16;
+        }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: var(--bg-gray); color: #333; overflow-x: hidden; }
+        * { box-sizing: border-box; }
+
+        /* Sidebar */
+        .sidebar { width: var(--sidebar-width); height: 100vh; background: var(--sidebar-bg); position: fixed; left: 0; top: 0; z-index: 2000; display: flex; flex-direction: column; color: #b3b9bf; }
+        .logo { height: 50px; background: #002140; color: #fff; font-weight: bold; font-size: 18px; display: flex; align-items: center; padding-left: 20px; }
+        .logo i { margin-right: 10px; color: var(--primary-blue); font-size: 20px; }
+        .menu-item { height: 44px; display: flex; align-items: center; padding-left: 24px; cursor: pointer; transition: 0.3s; font-size: 14px; }
+        .menu-item:hover { color: #fff; }
+        .menu-item.active { background: var(--primary-blue); color: #fff; }
+        .menu-item i { width: 24px; font-size: 14px; }
+        .menu-badge { background: #ff4d4f; color: white; padding: 0 6px; border-radius: 10px; font-size: 10px; margin-left: auto; margin-right: 15px; line-height: 16px; }
+
+        .main-layout { margin-left: var(--sidebar-width); min-height: 100vh; position: relative; }
+
+        /* Fixed Top */
+        .fixed-top-area { position: fixed; top: 0; right: 0; left: var(--sidebar-width); z-index: 1000; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .top-nav { height: var(--header-height); border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #fff; position: relative; z-index: 20; }
+        .nav-left { display: flex; align-items: center; gap: 15px; font-size: 14px; }
+        .breadcrumb { color: #999; }
+        .nav-right { display: flex; align-items: center; gap: 18px; color: #666; font-size: 15px; position: relative; }
+        .nav-icon { cursor: pointer; transition: 0.2s; }
+        .nav-icon:hover { color: var(--primary-blue); }
+
+        /* Trophy & Popover */
+        .trophy-wrap { position: relative; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 4px; transition: 0.2s; }
+        .trophy-wrap:hover, .trophy-wrap.active { background: #e6f7ff; color: #1890ff; }
+        .badge-dot { position: absolute; top: -2px; right: -4px; min-width: 16px; height: 16px; background: #ff4d4f; color: #fff; border-radius: 8px; font-size: 10px; line-height: 16px; text-align: center; border: 1px solid #fff; font-weight: bold; }
+        .pk-popover { position: absolute; top: 46px; right: -60px; width: 380px; background: #fff; border-radius: 8px; box-shadow: 0 6px 16px -8px rgba(0,0,0,0.08), 0 9px 28px 0 rgba(0,0,0,0.05), 0 12px 48px 16px rgba(0,0,0,0.03); z-index: 2100; display: none; flex-direction: column; border: 1px solid #f0f0f0; animation: fadeIn 0.2s ease-out; cursor: default; }
+        .pk-popover.show { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .pop-header { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .pop-title { font-weight: bold; font-size: 14px; color: #333; display: flex; align-items: center; gap: 6px; }
+        .pop-close { color: #ccc; cursor: pointer; font-size: 14px; }
+        .pop-body { padding: 12px; max-height: 400px; overflow-y: auto; background: #fafafa; }
+        .pop-footer { padding: 10px; border-top: 1px solid #f0f0f0; display: flex; gap: 10px; background: #fff; border-radius: 0 0 8px 8px; }
+        .pop-btn { flex: 1; padding: 6px 0; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; }
+        .btn-main { background: #1890ff; color: #fff; }
+        .btn-sub { background: #f0f5ff; color: #2f54eb; }
+
+        .pk-card-item { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 12px; margin-bottom: 10px; transition: 0.2s; position: relative; cursor: pointer; }
+        .pk-card-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #d9d9d9; }
+        .item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .item-title { font-weight: 600; font-size: 13px; color: #333; }
+        .item-tag { font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #f0f0f0; color: #999; }
+        .item-progress-bg { height: 6px; background: #f5f5f5; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .item-progress-fill { height: 100%; border-radius: 3px; width: 0; transition: width 0.5s ease; }
+        .fill-blue { background: #1890ff; }
+        .fill-green { background: #52c41a; }
+        .item-stats { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #888; }
+        .stat-blue { color: #1890ff; font-weight: 500; }
+
+        .invite-alert { background: #fff1f0; border: 1px solid #ffa39e; border-radius: 6px; padding: 10px; margin-bottom: 12px; cursor: pointer; }
+        .invite-txt { font-size: 13px; color: #333; margin-bottom: 8px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+        .invite-actions { display: flex; gap: 8px; }
+        .btn-accept { background: #52c41a; color: #fff; border: none; padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .btn-reject { background: #fff; border: 1px solid #ff4d4f; color: #ff4d4f; padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+        .user-avatar { width: 24px; height: 24px; border-radius: 50%; background: #1890ff; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+
+        /* PK Bar */
+        .pk-bar-wrapper { height: var(--pk-current-height); background: #fdfdfd; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; overflow: hidden; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .pk-bar-wrapper.collapsed { border-bottom: none; }
+        .pk-container { width: 90%; max-width: 1200px; display: flex; align-items: center; height: 100%; }
+        .p-side { display: flex; align-items: center; width: 160px; }
+        .p-left { justify-content: flex-end; margin-right: 15px; text-align: right; }
+        .p-right { justify-content: flex-start; margin-left: 15px; text-align: left; }
+        .p-avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 2; position: relative; }
+        .p-avatar.hit { animation: shake-hit 0.4s ease-in-out; filter: sepia(1) hue-rotate(-50deg) saturate(3); }
+        .p-info { display: flex; flex-direction: column; margin: 0 10px; line-height: 1.2; }
+        .p-name { font-size: 12px; color: #888; font-weight: 600; }
+        .p-score { font-size: 18px; font-weight: 800; font-family: 'DIN Alternate', sans-serif; }
+        .blue-txt { color: #1890ff; } .red-txt { color: #f5222d; }
+        .p-track { flex: 1; height: 20px; background: #e9e9e9; border-radius: 10px; position: relative; display: flex; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .bar { height: 100%; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; }
+        .bar-b { background: linear-gradient(90deg, #69c0ff, #1890ff); z-index: 2; box-shadow: 2px 0 10px rgba(24, 144, 255, 0.4); }
+        .bar-r { background: linear-gradient(90deg, #ff7875, #f5222d); z-index: 1; }
+        .ratio-text { position: absolute; top: 50%; transform: translateY(-50%) skewX(-15deg); font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.95); z-index: 5; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.2); font-family: 'Arial Black', 'Heiti SC', sans-serif; transition: all 0.6s; }
+        .ratio-l { left: 15px; } .ratio-r { right: 15px; }
+        .vs-point { position: absolute; top: 50%; transform: translate(-50%, -50%) skewX(-10deg); width: 32px; height: 24px; background: #fff; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #ccc; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: left 0.6s; border: 2px solid #f0f0f0; }
+        .pk-toggle-handle { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); width: 40px; height: 16px; background: #fff; border-radius: 0 0 8px 8px; box-shadow: 0 4px 4px -2px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; color: #999; font-size: 10px; z-index: 900; border: 1px solid #e8e8e8; border-top: none; transition: 0.2s; }
+        .pk-toggle-handle:hover { color: #1890ff; height: 18px; bottom: -18px; }
+
+        .content-area { padding: 20px; padding-top: calc(var(--header-height) + var(--pk-current-height) + 20px); max-width: 1400px; margin: 0 auto; transition: padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .page-container { display: none; animation: fadeInPage 0.3s ease; }
+        .page-container.active { display: block; }
+        @keyframes fadeInPage { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* PK Center */
+        .pk-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .pk-page-title { font-size: 20px; font-weight: bold; color: #333; display: flex; align-items: center; gap: 10px; }
+        .action-btn { padding: 8px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; border: 1px solid transparent; transition: 0.3s; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: var(--primary-blue); color: #fff; box-shadow: 0 2px 0 rgba(0,0,0,0.045); }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-default { background: #fff; border-color: #d9d9d9; color: #333; }
+        .btn-default:hover { color: var(--primary-blue); border-color: var(--primary-blue); }
+        .btn-green { background: #52c41a; color: #fff; border-color: #52c41a; }
+        .btn-green:hover { background: #73d13d; }
+        .btn-orange { background: #fa8c16; color: #fff; border-color: #fa8c16; }
+        .btn-orange:hover { background: #ffa940; }
+
+        /* Tabs with count */
+        .pk-tabs { display: flex; gap: 0; border-bottom: 1px solid #e8e8e8; margin-bottom: 20px; }
+        .pk-tab { padding: 10px 20px 12px; font-size: 14px; cursor: pointer; color: #666; position: relative; transition: 0.3s; border-bottom: 2px solid transparent; white-space: nowrap; }
+        .pk-tab:hover { color: var(--primary-blue); }
+        .pk-tab.active { color: var(--primary-blue); font-weight: 600; border-bottom-color: var(--primary-blue); }
+        .tab-count { background: #f0f0f0; color: #999; font-size: 11px; padding: 0 6px; border-radius: 8px; margin-left: 4px; }
+        .pk-tab.active .tab-count { background: #e6f7ff; color: #1890ff; }
+
+        /* Sub-tabs (type filter) */
+        .pk-type-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .type-filter { padding: 5px 14px; border: 1px solid #d9d9d9; border-radius: 16px; font-size: 13px; cursor: pointer; color: #666; background: #fff; transition: 0.2s; }
+        .type-filter:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+        .type-filter.active { background: var(--primary-blue); color: #fff; border-color: var(--primary-blue); }
+
+        .pk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+        .pk-card { background: #fff; border-radius: 8px; border: 1px solid #f0f0f0; padding: 20px; transition: 0.3s; position: relative; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; }
+        .pk-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #e6f7ff; transform: translateY(-2px); }
+        .card-tag { position: absolute; top: 0; right: 0; padding: 4px 10px; font-size: 12px; border-bottom-left-radius: 8px; color: #fff; font-weight: bold; }
+        .tag-ing { background: #1890ff; }
+        .tag-wait { background: #fa8c16; }
+        .tag-end { background: #d9d9d9; color: #666; }
+        .tag-invite { background: #f5222d; animation: pulse-red 2s infinite; }
+        .tag-pending { background: #faad14; }
+        .tag-reject { background: #8c8c8c; }
+        .tag-special { background: linear-gradient(135deg, #722ed1, #eb2f96); }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(255, 77, 79, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); } }
+
+        .pk-c-header { display: flex; justify-content: space-between; margin-bottom: 12px; margin-top: 5px; align-items: flex-start; }
+        .pk-c-title { font-size: 16px; font-weight: bold; color: #333; }
+        .pk-c-type { font-size: 12px; color: #999; background: #f5f5f5; padding: 2px 8px; border-radius: 2px; height: fit-content; white-space: nowrap; }
+        .pk-c-body { margin-bottom: 12px; }
+        .pk-c-metric { font-size: 12px; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .mini-progress { height: 8px; background: #f5f5f5; border-radius: 4px; overflow: hidden; margin-bottom: 10px; display: flex; }
+        .mini-bar { height: 100%; transition: width 0.5s; }
+        .mini-b { background: #69c0ff; } .mini-r { background: #ff7875; }
+        .pk-c-avatars { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .side-group { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+        .side-img { width: 28px; height: 28px; border-radius: 50%; background: #eee; }
+        .avatar-stack { display: flex; }
+        .avatar-stack .side-img { margin-left: -8px; border: 2px solid #fff; }
+        .avatar-stack .side-img:first-child { margin-left: 0; }
+        .pk-c-footer { margin-top: auto; border-top: 1px solid #f0f0f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #999; }
+        .link-btn { color: #1890ff; cursor: pointer; font-weight: 500; }
+        .pk-card-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .action-full-btn { flex: 1; padding: 6px 0; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-acc { background: #52c41a; color: #fff; }
+        .btn-acc:hover { background: #73d13d; }
+        .btn-rej { background: #fff; color: #ff4d4f; border: 1px solid #ff4d4f; }
+        .btn-rej:hover { background: #fff1f0; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.open { display: flex; opacity: 1; }
+        .modal-container { background: #fff; width: 640px; max-width: 95vw; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s; max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-overlay.open .modal-container { transform: translateY(0); }
+        .m-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: bold; flex-shrink: 0; }
+        .m-close { cursor: pointer; color: #999; }
+        .m-body { padding: 24px; overflow-y: auto; flex: 1; }
+        .m-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; text-align: right; background: #fff; border-radius: 0 0 8px 8px; display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-size: 14px; color: #333; font-weight: 600; }
+        .required-mark { color: #ff4d4f; margin-left: 4px; }
+        .form-hint { font-size: 12px; color: #999; font-weight: 400; margin-left: 6px; }
+        .form-radio-group { display: flex; gap: 0; margin-top: 5px; }
+        .radio-card { flex: 1; border: 1px solid #d9d9d9; padding: 10px 8px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; font-size: 13px; color: #555; }
+        .radio-card:first-child { border-radius: 4px 0 0 4px; }
+        .radio-card:last-child { border-radius: 0 4px 4px 0; }
+        .radio-card + .radio-card { border-left: none; }
+        .radio-card:hover { color: var(--primary-blue); }
+        .radio-card.selected { background: #e6f7ff; border-color: var(--primary-blue); color: var(--primary-blue); font-weight: 600; z-index: 1; }
+        .radio-card.selected + .radio-card { border-left: 1px solid var(--primary-blue); }
+        .radio-card i { display: block; font-size: 18px; margin-bottom: 4px; }
+        .radio-card small { font-size: 11px; color: #999; display: block; margin-top: 2px; }
+        .radio-card.selected small { color: #69c0ff; }
+
+        .form-input { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; transition: 0.2s; }
+        .form-input:focus { border-color: #40a9ff; outline: none; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+        .form-select { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; background: #fff; cursor: pointer; }
+        .form-checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; }
+        .checkbox-label { display: flex; align-items: center; font-size: 14px; cursor: pointer; color: #555; padding: 4px 10px; border: 1px solid #e8e8e8; border-radius: 4px; transition: 0.2s; }
+        .checkbox-label:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+        .checkbox-label input { margin-right: 6px; cursor: pointer; }
+        .checkbox-label.checked { background: #e6f7ff; border-color: var(--primary-blue); color: var(--primary-blue); }
+        .time-row { display: flex; gap: 20px; }
+        .time-col { flex: 1; }
+        textarea.form-input { resize: vertical; min-height: 70px; font-family: inherit; }
+        .btn-cancel { padding: 8px 20px; border-radius: 4px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #333; transition: 0.2s; }
+        .btn-submit { padding: 8px 20px; border-radius: 4px; cursor: pointer; border: none; background: #1890ff; color: #fff; transition: 0.2s; font-weight: 500; }
+        .btn-submit:hover { background: #40a9ff; }
+
+        /* Opponent selector */
+        .opponent-selector { border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px; }
+        .opponent-search { width: 100%; border: none; padding: 6px 8px; font-size: 13px; outline: none; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+        .opponent-list { max-height: 160px; overflow-y: auto; }
+        .opponent-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 4px; cursor: pointer; transition: 0.15s; font-size: 13px; }
+        .opponent-item:hover { background: #e6f7ff; }
+        .opponent-item.selected { background: #e6f7ff; border: 1px solid #91d5ff; }
+        .opponent-item .opp-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: bold; }
+        .opponent-item .opp-dept { font-size: 11px; color: #999; margin-left: auto; }
+        .selected-opponents { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .selected-tag { display: flex; align-items: center; gap: 4px; background: #f0f5ff; border: 1px solid #adc6ff; color: #2f54eb; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .selected-tag .remove-tag { cursor: pointer; font-size: 10px; margin-left: 2px; }
+
+        /* Detail modal */
+        .d-score-panel { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #f0f5ff 0%, #fff 50%, #fff0f6 100%); padding: 25px 30px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e8e8e8; }
+        .d-player { text-align: center; display: flex; flex-direction: column; align-items: center; position: relative; width: 140px; }
+        .d-avatar { width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        .d-name { font-size: 14px; color: #666; font-weight: 600; margin-bottom: 4px; }
+        .d-val { font-size: 22px; font-weight: 800; font-family: 'DIN Alternate', sans-serif; }
+        .d-tag { padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-top: 5px; font-weight: bold; }
+        .d-tag.lead { background: #ff4d4f; color: #fff; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(255, 77, 79, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); } }
+        .d-vs { text-align: center; }
+        .d-vs-text { font-size: 28px; font-weight: 900; color: #e8e8e8; font-style: italic; display: block; margin-bottom: 5px; }
+        .d-diff { background: rgba(0,0,0,0.04); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #888; font-weight: 500; }
+        .d-section { margin-bottom: 24px; }
+        .d-sec-title { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .d-time-track { height: 8px; background: #f0f0f0; border-radius: 4px; position: relative; margin: 10px 0; overflow: hidden; }
+        .d-time-fill { height: 100%; background: linear-gradient(90deg, #1890ff, #52c41a); width: 0; border-radius: 4px; transition: width 1s ease; }
+        .d-time-labels { display: flex; justify-content: space-between; font-size: 12px; color: #999; }
+        .d-reward-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .reward-card { border: 1px solid #eee; border-radius: 8px; padding: 15px; display: flex; gap: 12px; align-items: flex-start; }
+        .reward-card.win { background: #fffcf0; border-color: #ffe58f; }
+        .reward-card.lose { background: #fff1f0; border-color: #ffa39e; }
+        .r-icon { font-size: 24px; }
+        .r-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
+        .r-desc { font-size: 12px; color: #666; line-height: 1.4; }
+        .win .r-title { color: #fa8c16; } .lose .r-title { color: #f5222d; }
+
+        .invite-letter { background: #fff1f0; border: 2px dashed #ffccc7; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+        .invite-avatar-group { display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 15px; }
+        .i-big-avatar { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .i-vs { font-size: 24px; font-weight: 900; color: #ff4d4f; font-style: italic; }
+        .i-text { font-size: 14px; color: #555; font-style: italic; margin-bottom: 0; }
+
+        .status-flow { display: flex; align-items: center; justify-content: space-between; padding: 0 40px; margin: 30px 0; position: relative; }
+        .status-flow::before { content: ''; position: absolute; left: 50px; right: 50px; top: 15px; height: 2px; background: #e8e8e8; z-index: 1; }
+        .flow-step { position: relative; z-index: 2; text-align: center; background: #fff; padding: 0 10px; }
+        .step-icon { width: 32px; height: 32px; border-radius: 50%; background: #e8e8e8; color: #999; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 14px; border: 2px solid #fff; }
+        .step-icon.active { background: #1890ff; color: #fff; box-shadow: 0 0 0 3px rgba(24,144,255,0.2); }
+        .step-label { font-size: 12px; color: #999; }
+        .step-label.active { color: #333; font-weight: bold; }
+
+        /* Team member grid for group/team PK */
+        .team-panel { display: flex; gap: 30px; margin-bottom: 20px; }
+        .team-col { flex: 1; }
+        .team-name { font-size: 14px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .team-member-list { list-style: none; padding: 0; margin: 0; }
+        .team-member-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+        .team-member-list .member-avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; }
+        .team-member-list .member-score { margin-left: auto; font-weight: bold; font-size: 14px; }
+
+        /* Special indicator mode */
+        .special-card { background: linear-gradient(135deg, #f9f0ff 0%, #fff 100%); border: 1px solid #d3adf7; }
+        .special-card:hover { border-color: #b37feb; }
+        .special-badge { background: linear-gradient(135deg, #722ed1, #eb2f96); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+        .target-list { margin: 0; padding: 0; list-style: none; }
+        .target-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #fafafa; border-radius: 4px; margin-bottom: 6px; font-size: 13px; }
+        .target-item .target-name { display: flex; align-items: center; gap: 6px; }
+        .target-item .target-progress { display: flex; align-items: center; gap: 8px; }
+        .target-bar-bg { width: 80px; height: 6px; background: #e8e8e8; border-radius: 3px; overflow: hidden; }
+        .target-bar-fill { height: 100%; border-radius: 3px; }
+        .target-bar-fill.good { background: #52c41a; }
+        .target-bar-fill.warn { background: #faad14; }
+        .target-bar-fill.low { background: #ff4d4f; }
+
+        /* Animations */
+        .projectile { position: fixed; font-size: 28px; z-index: 3000; pointer-events: none; }
+        .explosion { position: fixed; font-size: 40px; z-index: 3000; pointer-events: none; animation: boom 0.6s ease-out forwards; }
+        @keyframes boom { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
+        @keyframes shake-hit { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
+        .float-num { position: fixed; font-size: 18px; font-weight: bold; z-index: 3000; pointer-events: none; animation: floatUp 1s ease-out forwards; -webkit-text-stroke: 1px white; }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; transform: translateY(-15px); } 100% { opacity: 0; transform: translateY(-40px); } }
+
+        .demo-control { position: fixed; bottom: 20px; right: 20px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 4000; text-align: center; }
+        .btn { padding: 8px 16px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; color: #fff; margin: 0 5px; }
+        .btn-a { background: #1890ff; } .btn-b { background: #ff4d4f; }
+
+        /* Dashboard */
+        .section-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 15px; border-left: 4px solid #1890ff; padding-left: 10px; display: flex; align-items: center; }
+        .card-row { display: flex; gap: 20px; margin-bottom: 25px; }
+        .data-card { flex: 1; background: #fff; padding: 20px; border-radius: 4px; display: flex; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .card-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-right: 15px; }
+        .icon-blue { background: #e6f7ff; color: #1890ff; }
+        .icon-cyan { background: #e6fffb; color: #13c2c2; }
+        .card-content { display: flex; flex-direction: column; }
+        .card-label { font-size: 13px; color: #888; margin-bottom: 4px; }
+        .card-num { font-size: 24px; font-weight: bold; color: #333; }
+        .funnel-card { flex: 1; background: #fff; padding: 20px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .funnel-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .funnel-icon { width: 40px; height: 40px; background: #e6f7ff; color: #1890ff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 12px; }
+        .funnel-main-num { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+        .funnel-stats { display: flex; gap: 20px; font-size: 12px; color: #666; }
+        .stat-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
+        .dot-red { background: #f5222d; } .dot-blue { background: #1890ff; }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+        .empty-state i { font-size: 48px; color: #d9d9d9; margin-bottom: 15px; }
+        .empty-state p { font-size: 14px; }
+
+        /* conditional show */
+        .hidden { display: none !important; }
+
+        /* Squad builder */
+        .squad-builder { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; }
+        .squad-section { margin-bottom: 12px; }
+        .squad-title { font-size: 13px; font-weight: bold; color: #333; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .squad-members { display: flex; gap: 8px; flex-wrap: wrap; }
+        .add-member-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px dashed #d9d9d9; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #999; transition: 0.2s; font-size: 14px; background: #fff; }
+        .add-member-btn:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+        .squad-member-chip { display: flex; align-items: center; gap: 4px; background: #e6f7ff; border: 1px solid #91d5ff; padding: 4px 10px; border-radius: 16px; font-size: 12px; color: #1890ff; }
+        .squad-member-chip .chip-remove { cursor: pointer; margin-left: 4px; }
+
+        /* Ranking table in detail */
+        .ranking-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .ranking-table th { background: #fafafa; padding: 8px 12px; text-align: left; border-bottom: 1px solid #e8e8e8; color: #666; }
+        .ranking-table td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; }
+        .rank-num { display: inline-flex; width: 20px; height: 20px; border-radius: 50%; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+        .rank-1 { background: #ffd700; color: #fff; }
+        .rank-2 { background: #c0c0c0; color: #fff; }
+        .rank-3 { background: #cd7f32; color: #fff; }
+        .rank-n { background: #f0f0f0; color: #999; }
+
+        /* Metric setting in special mode */
+        .metric-setting-row { display: flex; gap: 12px; align-items: center; padding: 10px; background: #f9f9f9; border-radius: 6px; margin-bottom: 8px; }
+        .metric-setting-row .ms-name { font-size: 13px; font-weight: 500; min-width: 100px; display: flex; align-items: center; gap: 6px; }
+        .metric-setting-row .ms-input { flex: 1; }
+        .metric-setting-row .ms-input input { width: 100%; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
+        .metric-setting-row .ms-reward { min-width: 120px; }
+        .metric-setting-row .ms-reward input { width: 100%; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; }
+
+        /* Initiator card in create PK */
+        .initiator-card { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f0f5ff; border: 1px solid #adc6ff; border-radius: 6px; position: relative; }
+        .initiator-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; font-weight: bold; flex-shrink: 0; }
+        .initiator-info { flex: 1; }
+        .initiator-name { font-size: 14px; font-weight: 600; color: #333; }
+        .initiator-dept { font-size: 12px; color: #999; margin-top: 2px; }
+        .initiator-change { font-size: 12px; color: #1890ff; cursor: pointer; font-weight: 500; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+        .initiator-change:hover { color: #40a9ff; }
+        .initiator-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #d9d9d9; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; display: none; max-height: 200px; overflow-y: auto; margin-top: 4px; }
+        .initiator-dropdown.show { display: block; }
+        .initiator-option { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; font-size: 13px; transition: 0.15s; }
+        .initiator-option:hover { background: #e6f7ff; }
+        .initiator-option.active { background: #e6f7ff; color: #1890ff; font-weight: 600; }
+        .initiator-option .io-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: bold; flex-shrink: 0; }
+        .initiator-option .io-info { flex: 1; }
+        .initiator-option .io-name { font-size: 13px; }
+        .initiator-option .io-sub { font-size: 11px; color: #999; }
+
+        /* Repeatable reward toggle */
+        .repeat-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; margin-top: 4px; }
+        .toggle-switch { position: relative; width: 32px; height: 18px; cursor: pointer; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 9px; transition: 0.3s; }
+        .toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: 0.3s; }
+        .toggle-switch input:checked + .toggle-slider { background: #722ed1; }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
+        .repeat-config { display: none; margin-top: 8px; padding: 8px 10px; background: #f9f0ff; border: 1px solid #d3adf7; border-radius: 4px; font-size: 12px; }
+        .repeat-config.show { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .repeat-config input { width: 60px; padding: 3px 6px; border: 1px solid #d9d9d9; border-radius: 3px; font-size: 12px; text-align: center; }
+        .repeat-config select { padding: 3px 6px; border: 1px solid #d9d9d9; border-radius: 3px; font-size: 12px; }
+
+        /* Notification badge animation */
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .badge-bounce { animation: bounce 0.3s ease; }
+
+        /* Tooltip-like help text */
+        .info-tip { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #e8e8e8; color: #999; font-size: 10px; cursor: help; margin-left: 4px; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="logo"><i class="fas fa-bolt"></i> 电销CRM</div>
+    <div class="menu-item active" id="menu-dashboard" onclick="switchPage('dashboard')"><i class="fas fa-home"></i> 个人工作台 <span class="menu-badge">99+</span></div>
+    <div class="menu-item" id="menu-pk-center" onclick="switchPage('pk-center')"><i class="fas fa-trophy"></i> PK 竞赛中心</div>
+    <div class="menu-item" id="menu-special" onclick="switchPage('special')"><i class="fas fa-bullseye"></i> 专项指标</div>
+    <div class="menu-item"><i class="fas fa-chart-line"></i> 数据看板</div>
+    <div class="menu-item"><i class="fas fa-database"></i> 我的数据</div>
+</div>
+
+<!-- Fixed Top Area -->
+<div class="fixed-top-area" id="fixedHeader">
+    <div class="top-nav">
+        <div class="nav-left">
+            <i class="fas fa-bars" style="margin-right:10px; cursor:pointer"></i>
+            <span class="breadcrumb" id="page-breadcrumb">首页 / 个人工作台</span>
+        </div>
+        <div class="nav-right">
+            <i class="far fa-bell nav-icon"></i>
+            <div class="trophy-wrap" id="trophyBtn" onclick="togglePKMenu(event)">
+                <i class="fas fa-trophy" style="font-size: 16px;"></i><span class="badge-dot" id="badgeCount">5</span>
+                <div class="pk-popover" id="pkPopover" onclick="event.stopPropagation()">
+                    <div class="pop-header"><span class="pop-title"><i class="fas fa-fire" style="color:#f5222d"></i> 我的PK进度</span><i class="fas fa-times pop-close" onclick="closePKMenu(event)"></i></div>
+                    <div class="pop-body">
+                        <div class="invite-alert" onclick="openModal('inviteDetailModal'); closePKMenu(event)">
+                            <div class="invite-txt"><i class="fas fa-envelope-open-text" style="color:#ff4d4f"></i> 收到 2 个新的 PK 挑战!</div>
+                            <div class="invite-actions">
+                                <button class="btn-accept" onclick="event.stopPropagation(); handleAcceptFromPopover(this)">快速接受</button>
+                                <button class="btn-reject" onclick="event.stopPropagation(); handleRejectFromPopover(this)">拒绝</button>
+                            </div>
+                        </div>
+                        <div class="pk-card-item" onclick="openModal('detailModal'); closePKMenu(event)">
+                            <div class="item-top"><span class="item-title">销售冠军挑战赛</span><span class="item-tag">个人PK</span></div>
+                            <div class="item-progress-bg"><div class="item-progress-fill fill-blue" style="width: 65%"></div></div>
+                            <div class="item-stats"><span class="stat-blue">我: ¥32,500 / 对手: ¥28,100</span><span class="link-btn">详情</span></div>
+                        </div>
+                        <div class="pk-card-item" onclick="openModal('teamDetailModal'); closePKMenu(event)">
+                            <div class="item-top"><span class="item-title">Q1冲刺团战</span><span class="item-tag">团队PK</span></div>
+                            <div class="item-progress-bg"><div class="item-progress-fill fill-blue" style="width: 53%"></div></div>
+                            <div class="item-stats"><span class="stat-blue">我方领先 +12,300</span><span class="link-btn">详情</span></div>
+                        </div>
+                        <div class="pk-card-item" onclick="openModal('specialDetailModal'); closePKMenu(event)">
+                            <div class="item-top"><span class="item-title">新人破局专项</span><span class="special-badge">专项指标</span></div>
+                            <div class="item-progress-bg"><div class="item-progress-fill fill-green" style="width: 40%"></div></div>
+                            <div class="item-stats"><span style="color:#722ed1; font-weight:500">已完成 2/5 项指标</span><span class="link-btn">详情</span></div>
+                        </div>
+                    </div>
+                    <div class="pop-footer">
+                        <button class="pop-btn btn-sub" onclick="switchPage('pk-center'); closePKMenu(event)">查看全部PK</button>
+                        <button class="pop-btn btn-main" onclick="openModal('createPkModal'); closePKMenu(event)">发起新PK</button>
+                    </div>
+                </div>
+            </div>
+            <div class="user-info"><div class="user-avatar"><i class="fas fa-user"></i></div><span>liyingping</span></div>
+        </div>
+    </div>
+
+    <!-- PK Bar -->
+    <div class="pk-bar-wrapper" id="pkBarWrapper">
+        <div class="pk-container">
+            <div class="p-side p-left">
+                <div class="p-info"><span class="p-name">销售一部</span><span class="p-score blue-txt" id="scoreA">314,440</span></div>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="p-avatar" id="avatarA">
+            </div>
+            <div class="p-track">
+                <div class="bar bar-b" id="barA" style="width: 53%"></div>
+                <div class="bar bar-r" id="barB" style="width: 47%"></div>
+                <div class="ratio-text ratio-l" id="ratioA">53%</div>
+                <div class="ratio-text ratio-r" id="ratioB">47%</div>
+                <div class="vs-point" id="vsBadge" style="left: 53%">VS</div>
+            </div>
+            <div class="p-side p-right">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="p-avatar" id="avatarB">
+                <div class="p-info"><span class="p-name">销售二部</span><span class="p-score red-txt" id="scoreB">280,000</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="pk-toggle-handle" onclick="togglePkBar()" title="收起/展开 PK条">
+        <i class="fas fa-angle-double-up" id="pkToggleIcon"></i>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-layout">
+    <div class="content-area">
+
+        <!-- =================== Dashboard =================== -->
+        <div id="page-dashboard" class="page-container active">
+            <div class="section-title">今日销售简报</div>
+            <div class="card-row">
+                <div class="data-card"><div class="card-icon icon-blue"><i class="fas fa-coins"></i></div><div class="card-content"><span class="card-label">销售额 (元)</span><span class="card-num">314,440.3</span></div></div>
+                <div class="data-card"><div class="card-icon icon-blue"><i class="fas fa-clipboard-check"></i></div><div class="card-content"><span class="card-label">订单量 (笔)</span><span class="card-num">142</span></div></div>
+                <div class="data-card"><div class="card-icon icon-cyan"><i class="fas fa-money-bill-wave"></i></div><div class="card-content"><span class="card-label">客单价 (元)</span><span class="card-num">2,214</span></div></div>
+                <div class="data-card"><div class="card-icon icon-cyan"><i class="fas fa-percentage"></i></div><div class="card-content"><span class="card-label">转化率 (%)</span><span class="card-num">1.2</span></div></div>
+            </div>
+            <div class="section-title">今日线索转化</div>
+            <div class="card-row">
+                <div class="funnel-card"><div class="funnel-header"><div class="funnel-icon"><i class="fas fa-inbox"></i></div><span>消耗线索</span></div><div class="funnel-main-num">8,113</div><div class="funnel-stats"><span><i class="stat-dot dot-red"></i>新增: 7,106</span><span><i class="stat-dot dot-blue"></i>付费: 1,007</span></div></div>
+                <div class="funnel-card"><div class="funnel-header"><div class="funnel-icon"><i class="fas fa-phone-volume"></i></div><span>有效沟通</span></div><div class="funnel-main-num">3,454</div><div class="funnel-stats"><span><i class="stat-dot dot-red"></i>新增: 2,797</span><span><i class="stat-dot dot-blue"></i>付费: 657</span></div></div>
+                <div class="funnel-card"><div class="funnel-header"><div class="funnel-icon"><i class="fas fa-file-signature"></i></div><span>成单线索</span></div><div class="funnel-main-num">127</div><div class="funnel-stats"><span><i class="stat-dot dot-red"></i>新增: 76</span><span><i class="stat-dot dot-blue"></i>付费: 51</span></div></div>
+            </div>
+        </div>
+
+        <!-- =================== PK Center =================== -->
+        <div id="page-pk-center" class="page-container">
+            <div class="pk-header">
+                <div class="pk-page-title"><i class="fas fa-fire" style="color:#f5222d"></i> PK 竞赛中心</div>
+                <div style="display:flex; gap:10px;">
+                    <button class="action-btn btn-orange" onclick="openModal('createSpecialModal')"><i class="fas fa-bullseye"></i> 专项指标</button>
+                    <button class="action-btn btn-primary" onclick="openModal('createPkModal')"><i class="fas fa-plus"></i> 发起 PK</button>
+                </div>
+            </div>
+
+            <!-- Status Tabs -->
+            <div class="pk-tabs" id="pkStatusTabs">
+                <div class="pk-tab active" onclick="filterPKCards('all', this)">全部 <span class="tab-count" id="countAll">10</span></div>
+                <div class="pk-tab" onclick="filterPKCards('ing', this)">进行中 <span class="tab-count" id="countIng">4</span></div>
+                <div class="pk-tab" onclick="filterPKCards('invite', this)">待我接受 <span class="tab-count" id="countInvite">2</span></div>
+                <div class="pk-tab" onclick="filterPKCards('pending', this)">待对方接受 <span class="tab-count" id="countPending">1</span></div>
+                <div class="pk-tab" onclick="filterPKCards('special', this)">专项指标 <span class="tab-count" id="countSpecial">2</span></div>
+                <div class="pk-tab" onclick="filterPKCards('end', this)">已结束 <span class="tab-count" id="countEnd">1</span></div>
+            </div>
+
+            <!-- Type Filters -->
+            <div class="pk-type-filters" id="pkTypeFilters">
+                <div class="type-filter active" onclick="filterByType('all', this)">全部类型</div>
+                <div class="type-filter" onclick="filterByType('personal', this)"><i class="fas fa-user"></i> 个人PK</div>
+                <div class="type-filter" onclick="filterByType('group', this)"><i class="fas fa-users"></i> 小组PK</div>
+                <div class="type-filter" onclick="filterByType('team', this)"><i class="fas fa-building"></i> 团队PK</div>
+                <div class="type-filter" onclick="filterByType('squad', this)"><i class="fas fa-people-carry"></i> 组队PK</div>
+                <div class="type-filter" onclick="filterByType('special', this)"><i class="fas fa-bullseye"></i> 专项指标</div>
+            </div>
+
+            <div class="pk-grid" id="pkGrid">
+
+                <!-- Card 1: 个人PK - 进行中 -->
+                <div class="pk-card" data-status="ing" data-type="personal" onclick="openModal('detailModal')">
+                    <div class="card-tag tag-ing">进行中</div>
+                    <div class="pk-c-header"><span class="pk-c-title">销售冠军挑战赛</span><span class="pk-c-type"><i class="fas fa-user"></i> 个人PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>指标：销售额 (元)</span><span>目标：50,000</span></div>
+                        <div class="mini-progress"><div class="mini-bar mini-b" style="width: 65%"></div><div class="mini-bar mini-r" style="width: 35%"></div></div>
+                    </div>
+                    <div class="pk-c-avatars">
+                        <div class="side-group"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="side-img"> 我</div>
+                        <span style="font-weight:900; color:#ddd; font-style:italic">VS</span>
+                        <div class="side-group">李强 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="side-img"></div>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 2 天</span><span class="link-btn">查看详情</span></div>
+                </div>
+
+                <!-- Card 2: 小组PK - 进行中 -->
+                <div class="pk-card" data-status="ing" data-type="group" onclick="openModal('groupDetailModal')">
+                    <div class="card-tag tag-ing">进行中</div>
+                    <div class="pk-c-header"><span class="pk-c-title">小组月度对抗赛</span><span class="pk-c-type"><i class="fas fa-users"></i> 小组PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>指标：成单量</span><span>截止：02-28</span></div>
+                        <div class="mini-progress"><div class="mini-bar mini-b" style="width: 58%"></div><div class="mini-bar mini-r" style="width: 42%"></div></div>
+                    </div>
+                    <div class="pk-c-avatars">
+                        <div class="side-group">
+                            <div class="avatar-stack">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Amy" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Tom" class="side-img">
+                            </div>
+                            销售一组
+                        </div>
+                        <span style="font-weight:900; color:#ddd; font-style:italic">VS</span>
+                        <div class="side-group">
+                            销售二组
+                            <div class="avatar-stack">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lily" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" class="side-img">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 5 天</span><span class="link-btn">查看详情</span></div>
+                </div>
+
+                <!-- Card 3: 团队PK - 进行中 -->
+                <div class="pk-card" data-status="ing" data-type="team" onclick="openModal('teamDetailModal')">
+                    <div class="card-tag tag-ing">进行中</div>
+                    <div class="pk-c-header"><span class="pk-c-title">Q1冲刺团战</span><span class="pk-c-type"><i class="fas fa-building"></i> 团队PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>指标：销售额 + 转化率</span><span>截止：03-31</span></div>
+                        <div class="mini-progress"><div class="mini-bar mini-b" style="width: 53%"></div><div class="mini-bar mini-r" style="width: 47%"></div></div>
+                    </div>
+                    <div class="pk-c-avatars">
+                        <div class="side-group">
+                            <div class="avatar-stack">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Amy" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Tom" class="side-img">
+                            </div>
+                            销售一部
+                        </div>
+                        <span style="font-weight:900; color:#ddd; font-style:italic">VS</span>
+                        <div class="side-group">
+                            销售二部
+                            <div class="avatar-stack">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lily" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" class="side-img">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 31 天</span><span class="link-btn">查看详情</span></div>
+                </div>
+
+                <!-- Card 4: 组队PK - 进行中 -->
+                <div class="pk-card" data-status="ing" data-type="squad" onclick="openModal('squadDetailModal')">
+                    <div class="card-tag tag-ing">进行中</div>
+                    <div class="pk-c-header"><span class="pk-c-title">跨部门精英对决</span><span class="pk-c-type"><i class="fas fa-people-carry"></i> 组队PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>指标：销售额</span><span>截止：03-15</span></div>
+                        <div class="mini-progress"><div class="mini-bar mini-b" style="width: 62%"></div><div class="mini-bar mini-r" style="width: 38%"></div></div>
+                    </div>
+                    <div class="pk-c-avatars">
+                        <div class="side-group">
+                            <div class="avatar-stack">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Amy" class="side-img">
+                            </div>
+                            精英A队
+                        </div>
+                        <span style="font-weight:900; color:#ddd; font-style:italic">VS</span>
+                        <div class="side-group">
+                            精英B队
+                            <div class="avatar-stack">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="side-img">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" class="side-img">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 15 天</span><span class="link-btn">查看详情</span></div>
+                </div>
+
+                <!-- Card 5: 个人PK - 待我接受 -->
+                <div class="pk-card" data-status="invite" data-type="personal" style="border-color: #ffa39e; background: #fffcfc;" onclick="openModal('inviteDetailModal')">
+                    <div class="card-tag tag-invite">待我接受</div>
+                    <div class="pk-c-header"><span class="pk-c-title">新人破局行动</span><span class="pk-c-type"><i class="fas fa-user"></i> 个人PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>发起人：王晓明</span><span>指标：新增线索</span></div>
+                        <div style="background:#f5f5f5; padding:8px; border-radius:4px; font-size:12px; color:#666; margin-bottom:10px;">
+                            "敢不敢来比一下这周的新增线索量？输了请喝奶茶！"
+                        </div>
+                    </div>
+                    <div class="pk-card-actions">
+                        <button class="action-full-btn btn-acc" onclick="event.stopPropagation(); handleAcceptPK(this)">接受挑战</button>
+                        <button class="action-full-btn btn-rej" onclick="event.stopPropagation(); handleRejectPK(this)">残忍拒绝</button>
+                    </div>
+                </div>
+
+                <!-- Card 6: 小组PK - 待我接受 -->
+                <div class="pk-card" data-status="invite" data-type="group" style="border-color: #ffa39e; background: #fffcfc;" onclick="openModal('inviteGroupModal')">
+                    <div class="card-tag tag-invite">待我接受</div>
+                    <div class="pk-c-header"><span class="pk-c-title">周末冲刺小组赛</span><span class="pk-c-type"><i class="fas fa-users"></i> 小组PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>发起方：销售三组</span><span>指标：成单量</span></div>
+                        <div style="background:#f5f5f5; padding:8px; border-radius:4px; font-size:12px; color:#666; margin-bottom:10px;">
+                            "三组全员已就位，你们敢不敢应战？"
+                        </div>
+                    </div>
+                    <div class="pk-card-actions">
+                        <button class="action-full-btn btn-acc" onclick="event.stopPropagation(); handleAcceptPK(this)">接受挑战</button>
+                        <button class="action-full-btn btn-rej" onclick="event.stopPropagation(); handleRejectPK(this)">残忍拒绝</button>
+                    </div>
+                </div>
+
+                <!-- Card 7: 待对方接受 -->
+                <div class="pk-card" data-status="pending" data-type="personal" onclick="openModal('pendingDetailModal')">
+                    <div class="card-tag tag-pending">待对方接受</div>
+                    <div class="pk-c-header"><span class="pk-c-title">日清PK挑战</span><span class="pk-c-type"><i class="fas fa-user"></i> 个人PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>对手：赵明</span><span>指标：成单率</span></div>
+                        <div style="font-size:12px; color:#faad14; margin-top:5px;"><i class="fas fa-hourglass-half"></i> 等待对方回应中...</div>
+                    </div>
+                    <div class="pk-c-footer"><span>发起于 2小时前</span><span class="link-btn" style="color:#999">查看进度</span></div>
+                </div>
+
+                <!-- Card 8: 专项指标 - 进行中 -->
+                <div class="pk-card special-card" data-status="special" data-type="special" onclick="openModal('specialDetailModal')">
+                    <div class="card-tag tag-special">专项指标</div>
+                    <div class="pk-c-header"><span class="pk-c-title">新人破局专项</span><span class="special-badge"><i class="fas fa-bullseye"></i> 专项</span></div>
+                    <div class="pk-c-body">
+                        <ul class="target-list">
+                            <li class="target-item">
+                                <span class="target-name"><i class="fas fa-check-circle" style="color:#52c41a"></i> 首单破冰</span>
+                                <span class="target-progress"><span style="color:#52c41a; font-weight:bold">已完成</span></span>
+                            </li>
+                            <li class="target-item">
+                                <span class="target-name"><i class="fas fa-spinner" style="color:#1890ff"></i> 日均通话≥30</span>
+                                <span class="target-progress">
+                                    <div class="target-bar-bg"><div class="target-bar-fill good" style="width:75%"></div></div>
+                                    <span style="font-size:11px">75%</span>
+                                </span>
+                            </li>
+                            <li class="target-item">
+                                <span class="target-name"><i class="fas fa-circle" style="color:#d9d9d9; font-size:10px"></i> 周成单≥5</span>
+                                <span class="target-progress">
+                                    <div class="target-bar-bg"><div class="target-bar-fill warn" style="width:40%"></div></div>
+                                    <span style="font-size:11px">2/5</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 10 天</span><span style="color:#722ed1; font-weight:500">奖励: ¥500 + 1天假</span></div>
+                </div>
+
+                <!-- Card 9: 专项指标 - 进行中 -->
+                <div class="pk-card special-card" data-status="special" data-type="special" onclick="openModal('specialDetailModal')">
+                    <div class="card-tag tag-special">专项指标</div>
+                    <div class="pk-c-header"><span class="pk-c-title">高价值客户攻坚</span><span class="special-badge"><i class="fas fa-bullseye"></i> 专项</span></div>
+                    <div class="pk-c-body">
+                        <ul class="target-list">
+                            <li class="target-item">
+                                <span class="target-name"><i class="fas fa-spinner" style="color:#1890ff"></i> 客单价≥5000</span>
+                                <span class="target-progress">
+                                    <div class="target-bar-bg"><div class="target-bar-fill warn" style="width:60%"></div></div>
+                                    <span style="font-size:11px">3/5</span>
+                                </span>
+                            </li>
+                            <li class="target-item">
+                                <span class="target-name"><i class="fas fa-circle" style="color:#d9d9d9; font-size:10px"></i> 续费率≥80%</span>
+                                <span class="target-progress">
+                                    <div class="target-bar-bg"><div class="target-bar-fill low" style="width:30%"></div></div>
+                                    <span style="font-size:11px">30%</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 20 天</span><span style="color:#722ed1; font-weight:500">奖励: ¥1,000</span></div>
+                </div>
+
+                <!-- Card 10: 已结束 -->
+                <div class="pk-card" data-status="end" data-type="personal" style="opacity:0.7" onclick="openModal('endDetailModal')">
+                    <div class="card-tag tag-end">已结束</div>
+                    <div class="pk-c-header"><span class="pk-c-title">二月对决赛</span><span class="pk-c-type"><i class="fas fa-user"></i> 个人PK</span></div>
+                    <div class="pk-c-body">
+                        <div class="pk-c-metric"><span>指标：销售额</span><span style="color:#52c41a; font-weight:bold"><i class="fas fa-trophy" style="color:#ffd700"></i> 胜利</span></div>
+                        <div class="pk-c-avatars">
+                            <div class="side-group"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="side-img"> 我 (¥45,200)</div>
+                            <span style="font-weight:900; color:#ddd; font-style:italic">VS</span>
+                            <div class="side-group">(¥38,800) 张伟 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=King" class="side-img"></div>
+                        </div>
+                    </div>
+                    <div class="pk-c-footer"><span>02-01 ~ 02-15</span><span class="link-btn">查看战报</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================== Special Indicator Page =================== -->
+        <div id="page-special" class="page-container">
+            <div class="pk-header">
+                <div class="pk-page-title"><i class="fas fa-bullseye" style="color:#722ed1"></i> 专项指标任务</div>
+                <button class="action-btn btn-orange" onclick="openModal('createSpecialModal')"><i class="fas fa-plus"></i> 创建专项任务</button>
+            </div>
+            <div class="pk-tabs">
+                <div class="pk-tab active">我的专项 <span class="tab-count">2</span></div>
+                <div class="pk-tab">我创建的 <span class="tab-count">1</span></div>
+                <div class="pk-tab">已完成 <span class="tab-count">3</span></div>
+            </div>
+            <div class="pk-grid">
+                <div class="pk-card special-card" onclick="openModal('specialDetailModal')">
+                    <div class="card-tag tag-special">进行中</div>
+                    <div class="pk-c-header"><span class="pk-c-title">新人破局专项</span><span class="special-badge"><i class="fas fa-bullseye"></i> 专项</span></div>
+                    <div class="pk-c-body">
+                        <div style="font-size:12px; color:#666; margin-bottom:10px">指定对象：<strong>liyingping</strong> · 创建人：张经理</div>
+                        <ul class="target-list">
+                            <li class="target-item"><span class="target-name"><i class="fas fa-check-circle" style="color:#52c41a"></i> 首单破冰</span><span style="color:#52c41a; font-weight:bold; font-size:12px">已完成</span></li>
+                            <li class="target-item"><span class="target-name"><i class="fas fa-check-circle" style="color:#52c41a"></i> 日均通话≥30通</span><span style="color:#52c41a; font-weight:bold; font-size:12px">已完成</span></li>
+                            <li class="target-item"><span class="target-name"><i class="fas fa-spinner" style="color:#1890ff"></i> 周成单≥5笔</span><span class="target-progress"><div class="target-bar-bg"><div class="target-bar-fill warn" style="width:40%"></div></div><span style="font-size:11px">2/5</span></span></li>
+                            <li class="target-item"><span class="target-name"><i class="fas fa-circle" style="color:#d9d9d9; font-size:10px"></i> 客户满意度≥90%</span><span class="target-progress"><div class="target-bar-bg"><div class="target-bar-fill low" style="width:20%"></div></div><span style="font-size:11px">20%</span></span></li>
+                            <li class="target-item"><span class="target-name"><i class="fas fa-circle" style="color:#d9d9d9; font-size:10px"></i> 月销售额≥5万</span><span class="target-progress"><div class="target-bar-bg"><div class="target-bar-fill warn" style="width:50%"></div></div><span style="font-size:11px">50%</span></span></li>
+                        </ul>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 10 天</span><span style="color:#722ed1; font-weight:500">完成奖励: ¥500 + 1天假期</span></div>
+                </div>
+                <div class="pk-card special-card" onclick="openModal('specialDetailModal')">
+                    <div class="card-tag tag-special">进行中</div>
+                    <div class="pk-c-header"><span class="pk-c-title">高价值客户攻坚</span><span class="special-badge"><i class="fas fa-bullseye"></i> 专项</span></div>
+                    <div class="pk-c-body">
+                        <div style="font-size:12px; color:#666; margin-bottom:10px">指定对象：<strong>全体销售</strong> · 创建人：李总监</div>
+                        <ul class="target-list">
+                            <li class="target-item"><span class="target-name"><i class="fas fa-spinner" style="color:#1890ff"></i> 客单价≥5000的成单≥5笔</span><span class="target-progress"><div class="target-bar-bg"><div class="target-bar-fill warn" style="width:60%"></div></div><span style="font-size:11px">3/5</span></span></li>
+                            <li class="target-item"><span class="target-name"><i class="fas fa-circle" style="color:#d9d9d9; font-size:10px"></i> 续费客户≥3个</span><span class="target-progress"><div class="target-bar-bg"><div class="target-bar-fill low" style="width:33%"></div></div><span style="font-size:11px">1/3</span></span></li>
+                        </ul>
+                    </div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 20 天</span><span style="color:#722ed1; font-weight:500">完成奖励: ¥1,000</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="height: 100px;"></div>
+    </div>
+</div>
+
+<!-- Demo Control -->
+<div class="demo-control">
+    <p style="margin:0 0 10px 0; font-size:12px; color:#999">模拟开单动效</p>
+    <button class="btn btn-a" onclick="handleAttack('A', 5000)">+5000</button>
+    <button class="btn btn-b" onclick="handleAttack('B', 6000)">+6000</button>
+</div>
+
+<!-- =================== 发起PK弹窗 =================== -->
+<div class="modal-overlay" id="createPkModal">
+    <div class="modal-container" style="width:680px">
+        <div class="m-header"><i class="fas fa-plus-circle" style="color:#1890ff; margin-right:8px"></i>发起PK挑战 <i class="fas fa-times m-close" onclick="closeModal('createPkModal')"></i></div>
+        <div class="m-body">
+            <div class="form-group">
+                <label class="form-label">PK模式 <span class="required-mark">*</span></label>
+                <div class="form-radio-group">
+                    <div class="radio-card selected" onclick="selectPKType(this, 'personal')">
+                        <i class="fas fa-user"></i> 个人PK
+                        <small>1v1 单挑</small>
+                    </div>
+                    <div class="radio-card" onclick="selectPKType(this, 'group')">
+                        <i class="fas fa-users"></i> 小组PK
+                        <small>按现有小组对抗</small>
+                    </div>
+                    <div class="radio-card" onclick="selectPKType(this, 'team')">
+                        <i class="fas fa-building"></i> 团队PK
+                        <small>按部门/团队对抗</small>
+                    </div>
+                    <div class="radio-card" onclick="selectPKType(this, 'squad')">
+                        <i class="fas fa-people-carry"></i> 组队PK
+                        <small>自由组队跨部门</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 发起方 -->
+            <div class="form-group" id="initiatorSection">
+                <label class="form-label">发起方 <span class="required-mark">*</span> <span class="form-hint">根据PK模式自动匹配，支持修改</span></label>
+                <div class="initiator-card" id="initiatorCard">
+                    <div class="initiator-avatar" id="initiatorAvatar" style="background:#1890ff">李</div>
+                    <div class="initiator-info">
+                        <div class="initiator-name" id="initiatorName">liyingping</div>
+                        <div class="initiator-dept" id="initiatorDept">销售一组 · 销售一部</div>
+                    </div>
+                    <div class="initiator-change" onclick="toggleInitiatorDropdown(event)"><i class="fas fa-exchange-alt"></i> 更换</div>
+                    <!-- 个人模式下拉 -->
+                    <div class="initiator-dropdown" id="initiatorDropdownPersonal">
+                        <div class="initiator-option active" onclick="changeInitiator('personal', 'liyingping', '销售一组 · 销售一部', '#1890ff', '李')">
+                            <div class="io-avatar" style="background:#1890ff">李</div>
+                            <div class="io-info"><div class="io-name">liyingping (我)</div><div class="io-sub">销售一组 · 销售一部</div></div>
+                        </div>
+                    </div>
+                    <!-- 小组模式下拉 -->
+                    <div class="initiator-dropdown" id="initiatorDropdownGroup">
+                        <div class="initiator-option active" onclick="changeInitiator('group', '销售一组', '5人 · 组长: liyingping', '#1890ff', '一')">
+                            <div class="io-avatar" style="background:#1890ff">一</div>
+                            <div class="io-info"><div class="io-name">销售一组 (当前所属)</div><div class="io-sub">5人 · 组长: liyingping</div></div>
+                        </div>
+                        <div class="initiator-option" onclick="changeInitiator('group', '销售二组', '6人 · 组长: 王晓明', '#52c41a', '二')">
+                            <div class="io-avatar" style="background:#52c41a">二</div>
+                            <div class="io-info"><div class="io-name">销售二组</div><div class="io-sub">6人 · 组长: 王晓明</div></div>
+                        </div>
+                        <div class="initiator-option" onclick="changeInitiator('group', '销售三组', '4人 · 组长: 赵明', '#fa8c16', '三')">
+                            <div class="io-avatar" style="background:#fa8c16">三</div>
+                            <div class="io-info"><div class="io-name">销售三组</div><div class="io-sub">4人 · 组长: 赵明</div></div>
+                        </div>
+                        <div class="initiator-option" onclick="changeInitiator('group', '销售四组', '5人 · 组长: 张伟', '#722ed1', '四')">
+                            <div class="io-avatar" style="background:#722ed1">四</div>
+                            <div class="io-info"><div class="io-name">销售四组</div><div class="io-sub">5人 · 组长: 张伟</div></div>
+                        </div>
+                    </div>
+                    <!-- 团队模式下拉 -->
+                    <div class="initiator-dropdown" id="initiatorDropdownTeam">
+                        <div class="initiator-option active" onclick="changeInitiator('team', '销售一部', '20人 · 负责人: 李总监', '#1890ff', '一')">
+                            <div class="io-avatar" style="background:#1890ff">一</div>
+                            <div class="io-info"><div class="io-name">销售一部 (当前所属)</div><div class="io-sub">20人 · 负责人: 李总监</div></div>
+                        </div>
+                        <div class="initiator-option" onclick="changeInitiator('team', '销售二部', '18人 · 负责人: 王总监', '#f5222d', '二')">
+                            <div class="io-avatar" style="background:#f5222d">二</div>
+                            <div class="io-info"><div class="io-name">销售二部</div><div class="io-sub">18人 · 负责人: 王总监</div></div>
+                        </div>
+                        <div class="initiator-option" onclick="changeInitiator('team', '销售三部', '15人 · 负责人: 赵总监', '#fa8c16', '三')">
+                            <div class="io-avatar" style="background:#fa8c16">三</div>
+                            <div class="io-info"><div class="io-name">销售三部</div><div class="io-sub">15人 · 负责人: 赵总监</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 对手选择区域 - 个人PK -->
+            <div class="form-group" id="opponentPersonal">
+                <label class="form-label">选择对手 <span class="required-mark">*</span></label>
+                <div class="opponent-selector">
+                    <input class="opponent-search" placeholder="搜索同事姓名..." oninput="filterOpponents(this.value)">
+                    <div class="opponent-list" id="opponentList">
+                        <div class="opponent-item" onclick="selectOpponent(this, '李强')"><div class="opp-avatar" style="background:#1890ff">李</div> 李强 <span class="opp-dept">销售一组</span></div>
+                        <div class="opponent-item" onclick="selectOpponent(this, '王晓明')"><div class="opp-avatar" style="background:#52c41a">王</div> 王晓明 <span class="opp-dept">销售二组</span></div>
+                        <div class="opponent-item" onclick="selectOpponent(this, '赵明')"><div class="opp-avatar" style="background:#fa8c16">赵</div> 赵明 <span class="opp-dept">销售一组</span></div>
+                        <div class="opponent-item" onclick="selectOpponent(this, '张伟')"><div class="opp-avatar" style="background:#722ed1">张</div> 张伟 <span class="opp-dept">销售三组</span></div>
+                        <div class="opponent-item" onclick="selectOpponent(this, '陈琳')"><div class="opp-avatar" style="background:#eb2f96">陈</div> 陈琳 <span class="opp-dept">销售二组</span></div>
+                    </div>
+                    <div class="selected-opponents" id="selectedOpponents"></div>
+                </div>
+            </div>
+
+            <!-- 小组选择 -->
+            <div class="form-group hidden" id="opponentGroup">
+                <label class="form-label">选择对手小组 <span class="required-mark">*</span></label>
+                <select class="form-select">
+                    <option value="">请选择对手小组...</option>
+                    <option>销售一组 (5人)</option>
+                    <option>销售二组 (6人)</option>
+                    <option>销售三组 (4人)</option>
+                    <option>销售四组 (5人)</option>
+                </select>
+            </div>
+
+            <!-- 团队选择 -->
+            <div class="form-group hidden" id="opponentTeam">
+                <label class="form-label">选择对手团队 <span class="required-mark">*</span></label>
+                <select class="form-select">
+                    <option value="">请选择对手团队...</option>
+                    <option>销售一部 (20人)</option>
+                    <option>销售二部 (18人)</option>
+                    <option>销售三部 (15人)</option>
+                </select>
+            </div>
+
+            <!-- 组队选择 -->
+            <div class="form-group hidden" id="opponentSquad">
+                <label class="form-label">组建我方队伍 <span class="required-mark">*</span> <span class="form-hint">自由选择跨部门队员</span></label>
+                <div class="squad-builder">
+                    <div class="squad-section">
+                        <div class="squad-title"><i class="fas fa-flag" style="color:#1890ff"></i> 我方队伍</div>
+                        <div class="squad-members" id="mySquad">
+                            <div class="squad-member-chip">liyingping (我) <span class="chip-remove" onclick="this.parentElement.remove()">×</span></div>
+                            <div class="add-member-btn" onclick="addSquadMember('mySquad')"><i class="fas fa-plus"></i></div>
+                        </div>
+                    </div>
+                    <div class="squad-section" style="margin-bottom:0">
+                        <div class="squad-title"><i class="fas fa-flag" style="color:#ff4d4f"></i> 对方队伍</div>
+                        <div class="squad-members" id="enemySquad">
+                            <div class="add-member-btn" onclick="addSquadMember('enemySquad')"><i class="fas fa-plus"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">PK指标 <span class="required-mark">*</span></label>
+                <div class="form-checkbox-group" id="metricCheckboxes">
+                    <label class="checkbox-label" onclick="toggleCheckbox(this)"><input type="checkbox" checked> 销售额</label>
+                    <label class="checkbox-label" onclick="toggleCheckbox(this)"><input type="checkbox"> 订单量</label>
+                    <label class="checkbox-label" onclick="toggleCheckbox(this)"><input type="checkbox"> 转化率</label>
+                    <label class="checkbox-label" onclick="toggleCheckbox(this)"><input type="checkbox"> 客单价</label>
+                    <label class="checkbox-label" onclick="toggleCheckbox(this)"><input type="checkbox"> 通话量</label>
+                    <label class="checkbox-label" onclick="toggleCheckbox(this)"><input type="checkbox"> 新增线索</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">PK名称</label>
+                <input type="text" class="form-input" placeholder="给这场PK起个响亮的名字">
+            </div>
+
+            <div class="time-row">
+                <div class="form-group time-col"><label class="form-label">开始时间 <span class="required-mark">*</span></label><input type="datetime-local" class="form-input" value="2026-02-28T09:00"></div>
+                <div class="form-group time-col"><label class="form-label">结束时间 <span class="required-mark">*</span></label><input type="datetime-local" class="form-input" value="2026-03-07T18:00"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">宣战宣言 <span class="form-hint">对方将看到此消息</span></label>
+                <textarea class="form-input" placeholder="写点霸气的话激怒对手吧..."></textarea>
+            </div>
+
+            <div class="time-row">
+                <div class="form-group time-col">
+                    <label class="form-label">胜方奖励</label>
+                    <textarea class="form-input" placeholder="如：获得¥500奖金" style="min-height:50px"></textarea>
+                </div>
+                <div class="form-group time-col">
+                    <label class="form-label">败方惩罚</label>
+                    <textarea class="form-input" placeholder="如：请赢家喝奶茶" style="min-height:50px"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="m-footer">
+            <button class="btn-cancel" onclick="closeModal('createPkModal')">取消</button>
+            <button class="btn-submit" onclick="sendPKInvite()"><i class="fas fa-paper-plane"></i> 发送挑战</button>
+        </div>
+    </div>
+</div>
+
+<!-- =================== 创建专项指标弹窗 =================== -->
+<div class="modal-overlay" id="createSpecialModal">
+    <div class="modal-container" style="width:680px">
+        <div class="m-header"><i class="fas fa-bullseye" style="color:#722ed1; margin-right:8px"></i>创建专项指标任务 <i class="fas fa-times m-close" onclick="closeModal('createSpecialModal')"></i></div>
+        <div class="m-body">
+            <div class="form-group">
+                <label class="form-label">任务名称 <span class="required-mark">*</span></label>
+                <input type="text" class="form-input" placeholder="如：新人破局专项、高价值客户攻坚">
+            </div>
+            <div class="form-group">
+                <label class="form-label">指定对象 <span class="required-mark">*</span> <span class="form-hint">选择需要完成指标的人员</span></label>
+                <div class="opponent-selector">
+                    <input class="opponent-search" placeholder="搜索成员姓名...">
+                    <div class="opponent-list">
+                        <div class="opponent-item" onclick="this.classList.toggle('selected')"><div class="opp-avatar" style="background:#1890ff">李</div> 李强 <span class="opp-dept">销售一组</span></div>
+                        <div class="opponent-item" onclick="this.classList.toggle('selected')"><div class="opp-avatar" style="background:#52c41a">王</div> 王晓明 <span class="opp-dept">销售二组</span></div>
+                        <div class="opponent-item" onclick="this.classList.toggle('selected')"><div class="opp-avatar" style="background:#fa8c16">赵</div> 赵明 <span class="opp-dept">销售一组</span></div>
+                        <div class="opponent-item selected" onclick="this.classList.toggle('selected')"><div class="opp-avatar" style="background:#722ed1">张</div> 张伟 <span class="opp-dept">销售三组</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">指标设置 <span class="required-mark">*</span> <span class="form-hint">设置需完成的具体指标和目标值，可开启重复获奖</span></label>
+                <div id="metricSettings">
+                    <div class="metric-setting-row" style="flex-wrap:wrap">
+                        <div style="display:flex; gap:12px; align-items:center; width:100%">
+                            <div class="ms-name"><i class="fas fa-grip-vertical" style="color:#ccc; cursor:grab"></i> <select class="form-select" style="width:auto; padding:4px 8px; font-size:12px"><option>销售额</option><option>成单量</option><option>通话量</option><option>客单价</option><option>转化率</option><option>新增线索</option></select></div>
+                            <div class="ms-input"><input placeholder="目标值，如：50000" style="padding:6px 10px; border:1px solid #d9d9d9; border-radius:4px; font-size:13px; width:100%"></div>
+                            <div class="ms-reward"><input placeholder="单项奖励" style="padding:6px 10px; border:1px solid #d9d9d9; border-radius:4px; font-size:13px; width:100%"></div>
+                            <i class="fas fa-times" style="color:#ccc; cursor:pointer" onclick="this.closest('.metric-setting-row').remove()"></i>
+                        </div>
+                        <div style="width:100%; padding-left:28px; margin-top:6px;">
+                            <div class="repeat-toggle">
+                                <label class="toggle-switch"><input type="checkbox" onchange="toggleRepeatConfig(this)"><span class="toggle-slider"></span></label>
+                                <span>可重复获奖</span>
+                                <span class="info-tip" title="开启后，每达成一次目标值即可获得一次奖励，不设上限或设定最多次数">?</span>
+                            </div>
+                            <div class="repeat-config">
+                                每达成 <input value="1" style="width:40px"> 次目标即奖励一次，
+                                上限 <select onchange="this.nextElementSibling.style.display=this.value==='limited'?'inline':'none'"><option value="unlimited">不限次数</option><option value="limited">最多</option></select><input value="5" style="width:40px; display:none"> 次
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-setting-row" style="flex-wrap:wrap">
+                        <div style="display:flex; gap:12px; align-items:center; width:100%">
+                            <div class="ms-name"><i class="fas fa-grip-vertical" style="color:#ccc; cursor:grab"></i> <select class="form-select" style="width:auto; padding:4px 8px; font-size:12px"><option>通话量</option><option>销售额</option><option>成单量</option><option>客单价</option><option>转化率</option><option>新增线索</option></select></div>
+                            <div class="ms-input"><input placeholder="目标值" style="padding:6px 10px; border:1px solid #d9d9d9; border-radius:4px; font-size:13px; width:100%"></div>
+                            <div class="ms-reward"><input placeholder="单项奖励" style="padding:6px 10px; border:1px solid #d9d9d9; border-radius:4px; font-size:13px; width:100%"></div>
+                            <i class="fas fa-times" style="color:#ccc; cursor:pointer" onclick="this.closest('.metric-setting-row').remove()"></i>
+                        </div>
+                        <div style="width:100%; padding-left:28px; margin-top:6px;">
+                            <div class="repeat-toggle">
+                                <label class="toggle-switch"><input type="checkbox" onchange="toggleRepeatConfig(this)"><span class="toggle-slider"></span></label>
+                                <span>可重复获奖</span>
+                                <span class="info-tip" title="开启后，每达成一次目标值即可获得一次奖励，不设上限或设定最多次数">?</span>
+                            </div>
+                            <div class="repeat-config">
+                                每达成 <input value="1" style="width:40px"> 次目标即奖励一次，
+                                上限 <select onchange="this.nextElementSibling.style.display=this.value==='limited'?'inline':'none'"><option value="unlimited">不限次数</option><option value="limited">最多</option></select><input value="5" style="width:40px; display:none"> 次
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button style="margin-top:8px; border:1px dashed #d9d9d9; background:#fff; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; color:#1890ff; width:100%" onclick="addMetricRow()">
+                    <i class="fas fa-plus"></i> 添加指标
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">完成条件</label>
+                <div class="form-radio-group" style="gap:20px">
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px"><input type="radio" name="completeCondition" checked> 全部指标达标</label>
+                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px"><input type="radio" name="completeCondition"> 任意N项达标</label>
+                </div>
+            </div>
+            <div class="time-row">
+                <div class="form-group time-col"><label class="form-label">开始时间</label><input type="datetime-local" class="form-input" value="2026-03-01T00:00"></div>
+                <div class="form-group time-col"><label class="form-label">截止时间</label><input type="datetime-local" class="form-input" value="2026-03-31T23:59"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">总体奖励 <span class="form-hint">全部指标完成后的额外奖励</span></label>
+                <textarea class="form-input" placeholder="如：现金¥500 + 额外1天带薪假期" style="min-height:50px"></textarea>
+            </div>
+        </div>
+        <div class="m-footer">
+            <button class="btn-cancel" onclick="closeModal('createSpecialModal')">取消</button>
+            <button class="btn-submit" style="background:#722ed1" onclick="createSpecialTask()"><i class="fas fa-bullseye"></i> 创建专项任务</button>
+        </div>
+    </div>
+</div>
+
+<!-- =================== 个人PK详情 - 进行中 =================== -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-container" style="width:680px">
+        <div class="m-header"><i class="fas fa-user" style="color:#1890ff; margin-right:8px"></i>销售冠军挑战赛 - 个人PK详情 <i class="fas fa-times m-close" onclick="closeModal('detailModal')"></i></div>
+        <div class="m-body">
+            <div class="d-score-panel">
+                <div class="d-player">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="d-avatar">
+                    <div class="d-name">我 (liyingping)</div>
+                    <div class="d-val blue-txt">¥ 32,500</div>
+                    <div class="d-tag lead">领先</div>
+                </div>
+                <div class="d-vs"><span class="d-vs-text">VS</span><div class="d-diff">领先: ¥4,400</div></div>
+                <div class="d-player">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="d-avatar" style="border-color:#eee">
+                    <div class="d-name">李强</div>
+                    <div class="d-val red-txt">¥ 28,100</div>
+                </div>
+            </div>
+            <div class="d-section"><div class="d-sec-title"><i class="fas fa-chart-line"></i> 目标达成</div><div class="item-progress-bg" style="height:10px; background:#e9e9e9"><div class="item-progress-fill fill-blue" style="width: 65%"></div></div><div style="text-align:center; font-size:12px; color:#999; margin-top:5px">我的目标达成率: 65% (¥32,500 / ¥50,000)</div></div>
+            <div class="d-section"><div class="d-sec-title"><i class="far fa-clock"></i> 时间进度 (第 5 天 / 共 7 天)</div><div class="d-time-track"><div class="d-time-fill" style="width: 71%"></div></div><div class="d-time-labels"><span>02-22 开始</span><span>02-28 结束</span></div></div>
+            <div class="d-section"><div class="d-sec-title"><i class="fas fa-balance-scale"></i> 奖惩机制</div><div class="d-reward-grid"><div class="reward-card win"><div class="r-icon">🎁</div><div class="r-content"><div class="r-title">胜方奖励</div><div class="r-desc">获得 ¥500 现金奖励 + "销售战神"流动红旗</div></div></div><div class="reward-card lose"><div class="r-icon">💣</div><div class="r-content"><div class="r-title">败方惩罚</div><div class="r-desc">为胜方购买下午茶（人均 ¥30 标准）</div></div></div></div></div>
+        </div>
+        <div class="m-footer"><button class="btn-submit" onclick="closeModal('detailModal')">关闭</button></div>
+    </div>
+</div>
+
+<!-- =================== 小组PK详情 =================== -->
+<div class="modal-overlay" id="groupDetailModal">
+    <div class="modal-container" style="width:720px">
+        <div class="m-header"><i class="fas fa-users" style="color:#1890ff; margin-right:8px"></i>小组月度对抗赛 - 小组PK详情 <i class="fas fa-times m-close" onclick="closeModal('groupDetailModal')"></i></div>
+        <div class="m-body">
+            <div class="d-score-panel" style="background: linear-gradient(135deg, #e6f7ff 0%, #fff 50%, #fff0f6 100%);">
+                <div class="d-player">
+                    <div style="display:flex; gap:-5px; margin-bottom:10px">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; margin-right:-10px; z-index:3">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Amy" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; margin-right:-10px; z-index:2">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Tom" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; z-index:1">
+                    </div>
+                    <div class="d-name">销售一组 (5人)</div>
+                    <div class="d-val blue-txt">87 单</div>
+                    <div class="d-tag lead">领先</div>
+                </div>
+                <div class="d-vs"><span class="d-vs-text">VS</span><div class="d-diff">领先: 12 单</div></div>
+                <div class="d-player">
+                    <div style="display:flex; gap:-5px; margin-bottom:10px">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; margin-right:-10px; z-index:3">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lily" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; margin-right:-10px; z-index:2">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; z-index:1">
+                    </div>
+                    <div class="d-name">销售二组 (6人)</div>
+                    <div class="d-val red-txt">75 单</div>
+                </div>
+            </div>
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-list-ol"></i> 组内成员排名</div>
+                <div class="team-panel">
+                    <div class="team-col">
+                        <div class="team-name" style="color:#1890ff"><i class="fas fa-flag"></i> 销售一组</div>
+                        <table class="ranking-table">
+                            <thead><tr><th>#</th><th>成员</th><th>成单</th></tr></thead>
+                            <tbody>
+                                <tr><td><span class="rank-num rank-1">1</span></td><td>liyingping (我)</td><td style="font-weight:bold; color:#1890ff">25</td></tr>
+                                <tr><td><span class="rank-num rank-2">2</span></td><td>陈琳</td><td style="font-weight:bold">22</td></tr>
+                                <tr><td><span class="rank-num rank-3">3</span></td><td>刘洋</td><td>18</td></tr>
+                                <tr><td><span class="rank-num rank-n">4</span></td><td>周峰</td><td>14</td></tr>
+                                <tr><td><span class="rank-num rank-n">5</span></td><td>吴静</td><td>8</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="team-col">
+                        <div class="team-name" style="color:#f5222d"><i class="fas fa-flag"></i> 销售二组</div>
+                        <table class="ranking-table">
+                            <thead><tr><th>#</th><th>成员</th><th>成单</th></tr></thead>
+                            <tbody>
+                                <tr><td><span class="rank-num rank-1">1</span></td><td>李强</td><td style="font-weight:bold; color:#f5222d">20</td></tr>
+                                <tr><td><span class="rank-num rank-2">2</span></td><td>王磊</td><td style="font-weight:bold">18</td></tr>
+                                <tr><td><span class="rank-num rank-3">3</span></td><td>孙悦</td><td>15</td></tr>
+                                <tr><td><span class="rank-num rank-n">4</span></td><td>赵雪</td><td>12</td></tr>
+                                <tr><td><span class="rank-num rank-n">5</span></td><td>黄斌</td><td>6</td></tr>
+                                <tr><td><span class="rank-num rank-n">6</span></td><td>杨帆</td><td>4</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="d-section"><div class="d-sec-title"><i class="far fa-clock"></i> 时间进度</div><div class="d-time-track"><div class="d-time-fill" style="width: 80%"></div></div><div class="d-time-labels"><span>02-01 开始</span><span>02-28 结束</span></div></div>
+        </div>
+        <div class="m-footer"><button class="btn-submit" onclick="closeModal('groupDetailModal')">关闭</button></div>
+    </div>
+</div>
+
+<!-- =================== 团队PK详情 =================== -->
+<div class="modal-overlay" id="teamDetailModal">
+    <div class="modal-container" style="width:720px">
+        <div class="m-header"><i class="fas fa-building" style="color:#1890ff; margin-right:8px"></i>Q1冲刺团战 - 团队PK详情 <i class="fas fa-times m-close" onclick="closeModal('teamDetailModal')"></i></div>
+        <div class="m-body">
+            <div class="d-score-panel">
+                <div class="d-player">
+                    <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #1890ff, #69c0ff); display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; font-weight:bold; margin-bottom:10px; box-shadow: 0 4px 10px rgba(24,144,255,0.3);">一部</div>
+                    <div class="d-name">销售一部 (20人)</div>
+                    <div class="d-val blue-txt">¥ 628,400</div>
+                    <div class="d-tag lead">领先</div>
+                </div>
+                <div class="d-vs"><span class="d-vs-text">VS</span><div class="d-diff">领先: ¥12,300</div></div>
+                <div class="d-player">
+                    <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #f5222d, #ff7875); display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; font-weight:bold; margin-bottom:10px; box-shadow: 0 4px 10px rgba(245,34,45,0.3);">二部</div>
+                    <div class="d-name">销售二部 (18人)</div>
+                    <div class="d-val red-txt">¥ 616,100</div>
+                </div>
+            </div>
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-chart-bar"></i> 多指标对比</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                    <div style="background:#f9f9f9; padding:12px; border-radius:6px"><div style="font-size:12px; color:#888; margin-bottom:6px">销售额</div><div style="display:flex; gap:8px; align-items:baseline"><span style="font-size:18px; font-weight:bold; color:#1890ff">¥628,400</span><span style="font-size:12px; color:#52c41a">+2%</span></div></div>
+                    <div style="background:#f9f9f9; padding:12px; border-radius:6px"><div style="font-size:12px; color:#888; margin-bottom:6px">转化率</div><div style="display:flex; gap:8px; align-items:baseline"><span style="font-size:18px; font-weight:bold; color:#1890ff">3.2%</span><span style="font-size:12px; color:#ff4d4f">-0.1%</span></div></div>
+                </div>
+            </div>
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-list-ol"></i> 团队TOP5排行</div>
+                <table class="ranking-table">
+                    <thead><tr><th>#</th><th>成员</th><th>部门</th><th>销售额</th><th>贡献度</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="rank-num rank-1">1</span></td><td>liyingping (我)</td><td>一部</td><td style="font-weight:bold">¥52,300</td><td>8.3%</td></tr>
+                        <tr><td><span class="rank-num rank-2">2</span></td><td>李强</td><td>二部</td><td style="font-weight:bold">¥48,600</td><td>7.9%</td></tr>
+                        <tr><td><span class="rank-num rank-3">3</span></td><td>陈琳</td><td>一部</td><td>¥45,200</td><td>7.2%</td></tr>
+                        <tr><td><span class="rank-num rank-n">4</span></td><td>王磊</td><td>二部</td><td>¥42,800</td><td>6.9%</td></tr>
+                        <tr><td><span class="rank-num rank-n">5</span></td><td>刘洋</td><td>一部</td><td>¥40,100</td><td>6.4%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-section"><div class="d-sec-title"><i class="far fa-clock"></i> 时间进度</div><div class="d-time-track"><div class="d-time-fill" style="width: 40%"></div></div><div class="d-time-labels"><span>02-01 开始</span><span>03-31 结束</span></div></div>
+        </div>
+        <div class="m-footer"><button class="btn-submit" onclick="closeModal('teamDetailModal')">关闭</button></div>
+    </div>
+</div>
+
+<!-- =================== 组队PK详情 =================== -->
+<div class="modal-overlay" id="squadDetailModal">
+    <div class="modal-container" style="width:720px">
+        <div class="m-header"><i class="fas fa-people-carry" style="color:#1890ff; margin-right:8px"></i>跨部门精英对决 - 组队PK详情 <i class="fas fa-times m-close" onclick="closeModal('squadDetailModal')"></i></div>
+        <div class="m-body">
+            <div class="d-score-panel" style="background: linear-gradient(135deg, #f0f5ff 0%, #fff 50%, #f9f0ff 100%);">
+                <div class="d-player">
+                    <div style="display:flex; margin-bottom:10px">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" style="width:36px; height:36px; border-radius:50%; border:2px solid #69c0ff; margin-right:-8px; z-index:2">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Amy" style="width:36px; height:36px; border-radius:50%; border:2px solid #69c0ff; z-index:1">
+                    </div>
+                    <div class="d-name">精英A队</div>
+                    <div style="font-size:11px; color:#999; margin-bottom:4px">liyingping + 陈琳</div>
+                    <div class="d-val blue-txt">¥ 86,200</div>
+                    <div class="d-tag lead">领先</div>
+                </div>
+                <div class="d-vs"><span class="d-vs-text">VS</span><div class="d-diff">领先: ¥8,400</div></div>
+                <div class="d-player">
+                    <div style="display:flex; margin-bottom:10px">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" style="width:36px; height:36px; border-radius:50%; border:2px solid #ff7875; margin-right:-8px; z-index:2">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" style="width:36px; height:36px; border-radius:50%; border:2px solid #ff7875; z-index:1">
+                    </div>
+                    <div class="d-name">精英B队</div>
+                    <div style="font-size:11px; color:#999; margin-bottom:4px">李强 + 王磊</div>
+                    <div class="d-val red-txt">¥ 77,800</div>
+                </div>
+            </div>
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-list-ol"></i> 队员数据</div>
+                <div class="team-panel">
+                    <div class="team-col">
+                        <div class="team-name" style="color:#1890ff"><i class="fas fa-flag"></i> 精英A队</div>
+                        <table class="ranking-table">
+                            <thead><tr><th>成员</th><th>来自</th><th>销售额</th></tr></thead>
+                            <tbody>
+                                <tr><td>liyingping (我)</td><td style="font-size:11px; color:#999">一组</td><td style="font-weight:bold; color:#1890ff">¥52,300</td></tr>
+                                <tr><td>陈琳</td><td style="font-size:11px; color:#999">二组</td><td style="font-weight:bold">¥33,900</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="team-col">
+                        <div class="team-name" style="color:#f5222d"><i class="fas fa-flag"></i> 精英B队</div>
+                        <table class="ranking-table">
+                            <thead><tr><th>成员</th><th>来自</th><th>销售额</th></tr></thead>
+                            <tbody>
+                                <tr><td>李强</td><td style="font-size:11px; color:#999">二组</td><td style="font-weight:bold; color:#f5222d">¥42,600</td></tr>
+                                <tr><td>王磊</td><td style="font-size:11px; color:#999">三组</td><td style="font-weight:bold">¥35,200</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="d-section"><div class="d-sec-title"><i class="far fa-clock"></i> 时间进度</div><div class="d-time-track"><div class="d-time-fill" style="width: 55%"></div></div><div class="d-time-labels"><span>02-15 开始</span><span>03-15 结束</span></div></div>
+            <div class="d-section"><div class="d-sec-title"><i class="fas fa-balance-scale"></i> 奖惩</div><div class="d-reward-grid"><div class="reward-card win"><div class="r-icon">🏆</div><div class="r-content"><div class="r-title">胜方奖励</div><div class="r-desc">每人 ¥300 现金 + 团队聚餐基金</div></div></div><div class="reward-card lose"><div class="r-icon">😅</div><div class="r-content"><div class="r-title">败方惩罚</div><div class="r-desc">为胜方团队承担一周值班</div></div></div></div></div>
+        </div>
+        <div class="m-footer"><button class="btn-submit" onclick="closeModal('squadDetailModal')">关闭</button></div>
+    </div>
+</div>
+
+<!-- =================== 收到邀请详情 =================== -->
+<div class="modal-overlay" id="inviteDetailModal">
+    <div class="modal-container" style="width:520px">
+        <div class="m-header"><span style="color:#ff4d4f">📩</span> 收到的挑战书 <i class="fas fa-times m-close" onclick="closeModal('inviteDetailModal')"></i></div>
+        <div class="m-body">
+            <div class="invite-letter">
+                <div class="invite-avatar-group">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=King" class="i-big-avatar">
+                    <span class="i-vs">VS</span>
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="i-big-avatar">
+                </div>
+                <div style="font-weight:bold; font-size:18px; margin-bottom:8px">王晓明 向你发起 1v1 挑战!</div>
+                <p class="i-text">"敢不敢来比一下这周的新增线索量？输了请喝奶茶！"</p>
+            </div>
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-bullseye"></i> 挑战指标</div>
+                <div style="background:#f9f9f9; padding:12px; border-radius:6px; font-size:14px; margin-bottom:15px;">
+                    <div style="margin-bottom:6px">指标：<strong>新增线索量</strong></div>
+                    <div style="margin-bottom:6px">周期：2026-03-01 至 2026-03-07 (7天)</div>
+                    <div>模式：<strong>个人PK (1v1)</strong></div>
+                </div>
+                <div class="d-sec-title"><i class="fas fa-balance-scale"></i> 奖惩条款</div>
+                <div class="d-reward-grid">
+                    <div class="reward-card win"><div class="r-icon">🎁</div><div class="r-content"><div class="r-title">胜方</div><div class="r-desc">赢家获得一杯喜茶</div></div></div>
+                    <div class="reward-card lose"><div class="r-icon">☕</div><div class="r-content"><div class="r-title">败方</div><div class="r-desc">输家买单（限额30元）</div></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="m-footer" style="background:#f0f2f5; justify-content: space-between;">
+            <button class="btn-cancel" onclick="handleRejectInModal()" style="color:#ff4d4f; border-color:#ff4d4f">残忍拒绝</button>
+            <button class="btn-submit" onclick="handleAcceptInModal()" style="background:#52c41a">接受挑战</button>
+        </div>
+    </div>
+</div>
+
+<!-- =================== 小组邀请详情 =================== -->
+<div class="modal-overlay" id="inviteGroupModal">
+    <div class="modal-container" style="width:520px">
+        <div class="m-header"><span style="color:#ff4d4f">📩</span> 收到的小组挑战书 <i class="fas fa-times m-close" onclick="closeModal('inviteGroupModal')"></i></div>
+        <div class="m-body">
+            <div class="invite-letter">
+                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;">
+                    <div style="text-align:center">
+                        <div style="display:flex">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Tom" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; margin-right:-8px; z-index:2">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sam" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; z-index:1">
+                        </div>
+                        <div style="font-size:12px; margin-top:4px; color:#666">销售三组</div>
+                    </div>
+                    <span class="i-vs" style="align-self:center">VS</span>
+                    <div style="text-align:center">
+                        <div style="display:flex">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; margin-right:-8px; z-index:2">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Amy" style="width:40px; height:40px; border-radius:50%; border:2px solid #fff; z-index:1">
+                        </div>
+                        <div style="font-size:12px; margin-top:4px; color:#666">你的小组</div>
+                    </div>
+                </div>
+                <div style="font-weight:bold; font-size:18px; margin-bottom:8px">销售三组 向你的小组发起挑战!</div>
+                <p class="i-text">"三组全员已就位，你们敢不敢应战？"</p>
+            </div>
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-bullseye"></i> 挑战详情</div>
+                <div style="background:#f9f9f9; padding:12px; border-radius:6px; font-size:14px">
+                    <div style="margin-bottom:6px">指标：<strong>成单量</strong></div>
+                    <div style="margin-bottom:6px">周期：2026-03-01 至 2026-03-07</div>
+                    <div>模式：<strong>小组PK</strong></div>
+                </div>
+            </div>
+        </div>
+        <div class="m-footer" style="background:#f0f2f5; justify-content: space-between;">
+            <button class="btn-cancel" onclick="handleRejectInModal()" style="color:#ff4d4f; border-color:#ff4d4f">残忍拒绝</button>
+            <button class="btn-submit" onclick="handleAcceptInModal()" style="background:#52c41a">全组接受挑战</button>
+        </div>
+    </div>
+</div>
+
+<!-- =================== 等待对方接受详情 =================== -->
+<div class="modal-overlay" id="pendingDetailModal">
+    <div class="modal-container" style="width:550px">
+        <div class="m-header">日清PK挑战 - 等待回应 <i class="fas fa-times m-close" onclick="closeModal('pendingDetailModal')"></i></div>
+        <div class="m-body">
+            <div class="status-flow">
+                <div class="flow-step"><div class="step-icon active"><i class="fas fa-paper-plane"></i></div><div class="step-label active">已发起</div></div>
+                <div class="flow-step"><div class="step-icon active"><i class="fas fa-check"></i></div><div class="step-label active">已送达</div></div>
+                <div class="flow-step"><div class="step-icon" style="color:#faad14; border-color:#faad14; background:#fffbf0"><i class="fas fa-hourglass-half"></i></div><div class="step-label active" style="color:#faad14">等待回应</div></div>
+                <div class="flow-step"><div class="step-icon"><i class="fas fa-play"></i></div><div class="step-label">开始PK</div></div>
+            </div>
+            <div style="text-align:center; color:#999; font-size:13px; margin-bottom:20px;">已等待 2小时 15分钟，对方尚未回应</div>
+            <div class="d-section">
+                <div class="d-sec-title">挑战信息</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                    <div style="background:#f9f9f9; padding:10px; border-radius:4px"><span style="font-size:12px; color:#999">对手</span><br><strong>赵明</strong></div>
+                    <div style="background:#f9f9f9; padding:10px; border-radius:4px"><span style="font-size:12px; color:#999">指标</span><br><strong>成单率</strong></div>
+                    <div style="background:#f9f9f9; padding:10px; border-radius:4px"><span style="font-size:12px; color:#999">发起时间</span><br><strong>今天 14:30</strong></div>
+                    <div style="background:#f9f9f9; padding:10px; border-radius:4px"><span style="font-size:12px; color:#999">PK模式</span><br><strong>个人PK</strong></div>
+                </div>
+            </div>
+        </div>
+        <div class="m-footer">
+            <button class="btn-cancel" onclick="handleWithdraw()" style="color:#ff4d4f; border-color:#ff4d4f">撤回邀请</button>
+            <button class="btn-submit" onclick="closeModal('pendingDetailModal')">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- =================== 已结束详情 =================== -->
+<div class="modal-overlay" id="endDetailModal">
+    <div class="modal-container" style="width:640px">
+        <div class="m-header"><i class="fas fa-trophy" style="color:#ffd700; margin-right:8px"></i>二月对决赛 - 战报 <i class="fas fa-times m-close" onclick="closeModal('endDetailModal')"></i></div>
+        <div class="m-body">
+            <div style="text-align:center; margin-bottom:20px">
+                <div style="font-size:48px; margin-bottom:10px">🏆</div>
+                <div style="font-size:22px; font-weight:bold; color:#fa8c16; margin-bottom:5px">恭喜获胜!</div>
+                <div style="font-size:14px; color:#999">02-01 ~ 02-15 | 个人PK</div>
+            </div>
+            <div class="d-score-panel">
+                <div class="d-player">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="d-avatar" style="border-color:#ffd700">
+                    <div class="d-name">我 (liyingping)</div>
+                    <div class="d-val blue-txt">¥ 45,200</div>
+                    <div class="d-tag" style="background:#ffd700; color:#fff">冠军</div>
+                </div>
+                <div class="d-vs"><span class="d-vs-text">VS</span><div class="d-diff">胜出: ¥6,400</div></div>
+                <div class="d-player">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=King" class="d-avatar">
+                    <div class="d-name">张伟</div>
+                    <div class="d-val red-txt">¥ 38,800</div>
+                </div>
+            </div>
+            <div class="d-section"><div class="d-sec-title"><i class="fas fa-balance-scale"></i> 奖惩执行</div><div class="d-reward-grid"><div class="reward-card win"><div class="r-icon">🎁</div><div class="r-content"><div class="r-title">你获得了</div><div class="r-desc">¥200 现金奖励已发放至工资账户</div></div></div><div class="reward-card lose"><div class="r-icon">☕</div><div class="r-content"><div class="r-title">对方需要</div><div class="r-desc">请你喝一周咖啡（进行中）</div></div></div></div></div>
+        </div>
+        <div class="m-footer"><button class="btn-submit" onclick="closeModal('endDetailModal')">关闭</button></div>
+    </div>
+</div>
+
+<!-- =================== 专项指标详情 =================== -->
+<div class="modal-overlay" id="specialDetailModal">
+    <div class="modal-container" style="width:640px">
+        <div class="m-header"><i class="fas fa-bullseye" style="color:#722ed1; margin-right:8px"></i>新人破局专项 - 详情 <i class="fas fa-times m-close" onclick="closeModal('specialDetailModal')"></i></div>
+        <div class="m-body">
+            <div style="background: linear-gradient(135deg, #f9f0ff 0%, #fff 100%); border: 1px solid #d3adf7; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center;">
+                <div style="font-size:36px; margin-bottom:8px">🎯</div>
+                <div style="font-size:18px; font-weight:bold; color:#722ed1; margin-bottom:4px">新人破局专项</div>
+                <div style="font-size:13px; color:#999">创建人：张经理 | 指定对象：liyingping</div>
+                <div style="margin-top:12px; display:flex; justify-content:center; gap:20px; font-size:13px">
+                    <span><i class="far fa-calendar"></i> 03-01 ~ 03-31</span>
+                    <span><i class="far fa-clock"></i> 剩余 10 天</span>
+                    <span style="color:#722ed1; font-weight:bold"><i class="fas fa-gift"></i> 奖励: ¥500 + 1天假</span>
+                </div>
+            </div>
+
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-tasks"></i> 指标完成情况 <span style="margin-left:auto; font-size:12px; color:#722ed1; font-weight:normal">2/5 已完成</span></div>
+                <div style="margin-bottom:15px">
+                    <div class="item-progress-bg" style="height:8px"><div class="item-progress-fill" style="width:40%; background:linear-gradient(90deg, #722ed1, #eb2f96)"></div></div>
+                    <div style="text-align:center; font-size:12px; color:#999; margin-top:4px">总体进度 40%</div>
+                </div>
+
+                <div style="border:1px solid #f0f0f0; border-radius:6px; overflow:hidden">
+                    <div style="display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f0f0f0; background:#f6ffed">
+                        <i class="fas fa-check-circle" style="color:#52c41a; margin-right:10px; font-size:16px"></i>
+                        <div style="flex:1"><div style="font-weight:600; font-size:13px">首单破冰</div><div style="font-size:11px; color:#999">完成首笔成单</div></div>
+                        <span style="color:#52c41a; font-weight:bold; font-size:13px">已完成</span>
+                    </div>
+                    <div style="display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f0f0f0; background:#f6ffed">
+                        <i class="fas fa-check-circle" style="color:#52c41a; margin-right:10px; font-size:16px"></i>
+                        <div style="flex:1"><div style="font-weight:600; font-size:13px">日均通话≥30通</div><div style="font-size:11px; color:#999">连续5个工作日达标</div></div>
+                        <span style="color:#52c41a; font-weight:bold; font-size:13px">已完成</span>
+                    </div>
+                    <div style="display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f0f0f0">
+                        <i class="fas fa-spinner fa-spin" style="color:#1890ff; margin-right:10px; font-size:16px"></i>
+                        <div style="flex:1"><div style="font-weight:600; font-size:13px">周成单≥5笔 <span style="display:inline-block; background:#f9f0ff; color:#722ed1; font-size:10px; padding:1px 6px; border-radius:3px; margin-left:4px; font-weight:bold"><i class="fas fa-redo-alt" style="font-size:8px"></i> 可重复获奖</span></div><div style="font-size:11px; color:#999">本周已完成 2 笔，还差 3 笔 · <span style="color:#722ed1">每达成1次奖 ¥100，已获 0 次</span></div></div>
+                        <div style="display:flex; align-items:center; gap:8px"><div class="target-bar-bg" style="width:60px"><div class="target-bar-fill warn" style="width:40%"></div></div><span style="font-size:12px; font-weight:bold">2/5</span></div>
+                    </div>
+                    <div style="display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f0f0f0">
+                        <i class="far fa-circle" style="color:#d9d9d9; margin-right:10px; font-size:16px"></i>
+                        <div style="flex:1"><div style="font-weight:600; font-size:13px">客户满意度≥90%</div><div style="font-size:11px; color:#999">当前满意度评分 72%</div></div>
+                        <div style="display:flex; align-items:center; gap:8px"><div class="target-bar-bg" style="width:60px"><div class="target-bar-fill low" style="width:20%"></div></div><span style="font-size:12px; font-weight:bold; color:#ff4d4f">72%</span></div>
+                    </div>
+                    <div style="display:flex; align-items:center; padding:12px 16px">
+                        <i class="far fa-circle" style="color:#d9d9d9; margin-right:10px; font-size:16px"></i>
+                        <div style="flex:1"><div style="font-weight:600; font-size:13px">月销售额≥5万 <span style="display:inline-block; background:#f9f0ff; color:#722ed1; font-size:10px; padding:1px 6px; border-radius:3px; margin-left:4px; font-weight:bold"><i class="fas fa-redo-alt" style="font-size:8px"></i> 可重复获奖</span></div><div style="font-size:11px; color:#999">当前 ¥25,000 · <span style="color:#722ed1">每达成1次奖 ¥200，最多3次，已获 0 次</span></div></div>
+                        <div style="display:flex; align-items:center; gap:8px"><div class="target-bar-bg" style="width:60px"><div class="target-bar-fill warn" style="width:50%"></div></div><span style="font-size:12px; font-weight:bold">50%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-gift"></i> 奖励详情</div>
+                <div style="background:#f9f0ff; border:1px solid #d3adf7; padding:15px; border-radius:6px; font-size:14px; color:#531dab">
+                    <strong>全部指标完成后可获得：</strong>
+                    <ul style="margin:8px 0 0 0; padding-left:20px; line-height:1.8">
+                        <li>现金奖励 ¥500</li>
+                        <li>额外 1 天带薪假期</li>
+                        <li>"新人王" 荣誉称号</li>
+                    </ul>
+                    <div style="margin-top:12px; padding-top:10px; border-top:1px dashed #d3adf7">
+                        <strong><i class="fas fa-redo-alt" style="font-size:11px"></i> 可重复获奖的指标：</strong>
+                        <ul style="margin:6px 0 0 0; padding-left:20px; line-height:1.8; font-size:13px">
+                            <li>周成单≥5笔：每达成 1 次奖 ¥100（不限次数）<span style="color:#999">— 当前已获 0 次</span></li>
+                            <li>月销售额≥5万：每达成 1 次奖 ¥200（最多 3 次）<span style="color:#999">— 当前已获 0 次</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="m-footer"><button class="btn-submit" style="background:#722ed1" onclick="closeModal('specialDetailModal')">关闭</button></div>
+    </div>
+</div>
+
+<script>
+    // Page switching
+    function switchPage(pageId) {
+        document.querySelectorAll('.page-container').forEach(el => el.classList.remove('active'));
+        const page = document.getElementById('page-' + pageId);
+        if (page) page.classList.add('active');
+        document.querySelectorAll('.sidebar .menu-item').forEach(el => el.classList.remove('active'));
+        const menuItem = document.getElementById('menu-' + pageId);
+        if (menuItem) menuItem.classList.add('active');
+        const breadcrumbMap = {
+            'dashboard': '首页 / 个人工作台',
+            'pk-center': '首页 / PK竞赛中心',
+            'special': '首页 / 专项指标'
+        };
+        document.getElementById('page-breadcrumb').textContent = breadcrumbMap[pageId] || '首页';
+    }
+
+    // PK Menu popover
+    function togglePKMenu(e) {
+        e.stopPropagation();
+        document.getElementById('pkPopover').classList.toggle('show');
+        document.getElementById('trophyBtn').classList.toggle('active');
+    }
+    function closePKMenu(e) {
+        if (e) e.stopPropagation();
+        document.getElementById('pkPopover').classList.remove('show');
+        document.getElementById('trophyBtn').classList.remove('active');
+    }
+    document.addEventListener('click', () => {
+        document.getElementById('pkPopover').classList.remove('show');
+        document.getElementById('trophyBtn').classList.remove('active');
+    });
+
+    // Modals
+    function openModal(modalId) { document.getElementById(modalId).classList.add('open'); }
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('open'); }
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+    });
+
+    // PK Bar toggle
+    let isPkCollapsed = false;
+    function togglePkBar() {
+        const wrapper = document.getElementById('pkBarWrapper');
+        const icon = document.getElementById('pkToggleIcon');
+        const root = document.documentElement;
+        if (!isPkCollapsed) {
+            wrapper.style.height = '0px';
+            wrapper.classList.add('collapsed');
+            root.style.setProperty('--pk-current-height', '0px');
+            icon.className = 'fas fa-angle-double-down';
+            isPkCollapsed = true;
+        } else {
+            wrapper.style.height = 'var(--pk-full-height)';
+            wrapper.classList.remove('collapsed');
+            root.style.setProperty('--pk-current-height', '60px');
+            icon.className = 'fas fa-angle-double-up';
+            isPkCollapsed = false;
+        }
+    }
+
+    // PK Type selection in create modal
+    let currentPKType = 'personal';
+    const initiatorDefaults = {
+        personal: { name: 'liyingping', dept: '销售一组 · 销售一部', color: '#1890ff', letter: '李' },
+        group:    { name: '销售一组', dept: '5人 · 组长: liyingping', color: '#1890ff', letter: '一' },
+        team:     { name: '销售一部', dept: '20人 · 负责人: 李总监', color: '#1890ff', letter: '一' },
+        squad:    { name: 'liyingping', dept: '自由组队 · 队长', color: '#1890ff', letter: '李' }
+    };
+
+    function selectPKType(el, type) {
+        document.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        currentPKType = type;
+
+        document.getElementById('opponentPersonal').classList.add('hidden');
+        document.getElementById('opponentGroup').classList.add('hidden');
+        document.getElementById('opponentTeam').classList.add('hidden');
+        document.getElementById('opponentSquad').classList.add('hidden');
+        if (type === 'personal') document.getElementById('opponentPersonal').classList.remove('hidden');
+        if (type === 'group') document.getElementById('opponentGroup').classList.remove('hidden');
+        if (type === 'team') document.getElementById('opponentTeam').classList.remove('hidden');
+        if (type === 'squad') document.getElementById('opponentSquad').classList.remove('hidden');
+
+        const def = initiatorDefaults[type];
+        document.getElementById('initiatorAvatar').style.background = def.color;
+        document.getElementById('initiatorAvatar').textContent = def.letter;
+        document.getElementById('initiatorName').textContent = def.name;
+        document.getElementById('initiatorDept').textContent = def.dept;
+
+        closeAllInitiatorDropdowns();
+
+        document.querySelectorAll('.initiator-dropdown .initiator-option').forEach(o => o.classList.remove('active'));
+        const dropdown = getInitiatorDropdown(type);
+        if (dropdown) {
+            const first = dropdown.querySelector('.initiator-option');
+            if (first) first.classList.add('active');
+        }
+    }
+
+    function getInitiatorDropdown(type) {
+        const map = { personal: 'initiatorDropdownPersonal', group: 'initiatorDropdownGroup', team: 'initiatorDropdownTeam' };
+        return map[type] ? document.getElementById(map[type]) : null;
+    }
+
+    function toggleInitiatorDropdown(e) {
+        e.stopPropagation();
+        if (currentPKType === 'squad') {
+            showToast('组队PK模式下，在下方队伍中直接编辑成员', 'info');
+            return;
+        }
+        closeAllInitiatorDropdowns();
+        const dropdown = getInitiatorDropdown(currentPKType);
+        if (dropdown) dropdown.classList.toggle('show');
+    }
+
+    function closeAllInitiatorDropdowns() {
+        document.querySelectorAll('.initiator-dropdown').forEach(d => d.classList.remove('show'));
+    }
+
+    function changeInitiator(type, name, dept, color, letter) {
+        document.getElementById('initiatorAvatar').style.background = color;
+        document.getElementById('initiatorAvatar').textContent = letter;
+        document.getElementById('initiatorName').textContent = name;
+        document.getElementById('initiatorDept').textContent = dept;
+
+        const dropdown = getInitiatorDropdown(type);
+        if (dropdown) {
+            dropdown.querySelectorAll('.initiator-option').forEach(o => o.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+        closeAllInitiatorDropdowns();
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.initiator-card')) closeAllInitiatorDropdowns();
+    });
+
+    // Opponent selection
+    let selectedOpponents = [];
+    function selectOpponent(el, name) {
+        if (el.classList.contains('selected')) {
+            el.classList.remove('selected');
+            selectedOpponents = selectedOpponents.filter(n => n !== name);
+        } else {
+            el.classList.add('selected');
+            selectedOpponents.push(name);
+        }
+        renderSelectedOpponents();
+    }
+    function renderSelectedOpponents() {
+        const container = document.getElementById('selectedOpponents');
+        container.innerHTML = selectedOpponents.map(name =>
+            `<div class="selected-tag">${name} <span class="remove-tag" onclick="removeOpponent('${name}')">×</span></div>`
+        ).join('');
+    }
+    function removeOpponent(name) {
+        selectedOpponents = selectedOpponents.filter(n => n !== name);
+        document.querySelectorAll('.opponent-item').forEach(item => {
+            if (item.textContent.includes(name)) item.classList.remove('selected');
+        });
+        renderSelectedOpponents();
+    }
+    function filterOpponents(query) {
+        document.querySelectorAll('#opponentList .opponent-item').forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(query.toLowerCase()) ? 'flex' : 'none';
+        });
+    }
+
+    // Checkbox toggle
+    function toggleCheckbox(label) {
+        setTimeout(() => {
+            const cb = label.querySelector('input');
+            label.classList.toggle('checked', cb.checked);
+        }, 0);
+    }
+
+    // Squad member adding
+    const squadNames = ['陈琳', '刘洋', '周峰', '吴静', '李强', '王磊', '孙悦'];
+    let squadIdx = 0;
+    function addSquadMember(containerId) {
+        if (squadIdx >= squadNames.length) { alert('已没有更多可选成员'); return; }
+        const name = squadNames[squadIdx++];
+        const container = document.getElementById(containerId);
+        const addBtn = container.querySelector('.add-member-btn');
+        const chip = document.createElement('div');
+        chip.className = 'squad-member-chip';
+        chip.innerHTML = `${name} <span class="chip-remove" onclick="this.parentElement.remove()">×</span>`;
+        container.insertBefore(chip, addBtn);
+    }
+
+    // Send PK invite
+    function sendPKInvite() {
+        const typeEl = document.querySelector('.radio-card.selected');
+        const typeText = typeEl ? typeEl.textContent.trim().split('\n')[0] : '个人PK';
+        showToast(`挑战已发送! (${typeText}) 等待对方接受...`, 'success');
+        closeModal('createPkModal');
+        updateBadge(1);
+    }
+
+    // Create special task
+    function createSpecialTask() {
+        showToast('专项指标任务已创建!', 'success');
+        closeModal('createSpecialModal');
+    }
+
+    // Add metric row in special modal
+    function addMetricRow() {
+        const container = document.getElementById('metricSettings');
+        const row = document.createElement('div');
+        row.className = 'metric-setting-row';
+        row.style.flexWrap = 'wrap';
+        row.innerHTML = `
+            <div style="display:flex; gap:12px; align-items:center; width:100%">
+                <div class="ms-name"><i class="fas fa-grip-vertical" style="color:#ccc; cursor:grab"></i>
+                <select class="form-select" style="width:auto; padding:4px 8px; font-size:12px"><option>销售额</option><option>成单量</option><option>通话量</option><option>客单价</option><option>转化率</option><option>新增线索</option></select></div>
+                <div class="ms-input"><input placeholder="目标值" style="padding:6px 10px; border:1px solid #d9d9d9; border-radius:4px; font-size:13px; width:100%"></div>
+                <div class="ms-reward"><input placeholder="单项奖励" style="padding:6px 10px; border:1px solid #d9d9d9; border-radius:4px; font-size:13px; width:100%"></div>
+                <i class="fas fa-times" style="color:#ccc; cursor:pointer" onclick="this.closest('.metric-setting-row').remove()"></i>
+            </div>
+            <div style="width:100%; padding-left:28px; margin-top:6px;">
+                <div class="repeat-toggle">
+                    <label class="toggle-switch"><input type="checkbox" onchange="toggleRepeatConfig(this)"><span class="toggle-slider"></span></label>
+                    <span>可重复获奖</span>
+                    <span class="info-tip" title="开启后，每达成一次目标值即可获得一次奖励">?</span>
+                </div>
+                <div class="repeat-config">
+                    每达成 <input value="1" style="width:40px"> 次目标即奖励一次，
+                    上限 <select onchange="this.nextElementSibling.style.display=this.value==='limited'?'inline':'none'"><option value="unlimited">不限次数</option><option value="limited">最多</option></select><input value="5" style="width:40px; display:none"> 次
+                </div>
+            </div>`;
+        container.appendChild(row);
+    }
+
+    function toggleRepeatConfig(checkbox) {
+        const configEl = checkbox.closest('.repeat-toggle').parentElement.querySelector('.repeat-config');
+        if (checkbox.checked) {
+            configEl.classList.add('show');
+        } else {
+            configEl.classList.remove('show');
+        }
+    }
+
+    // Accept/Reject PK
+    function handleAcceptPK(btn) {
+        const card = btn.closest('.pk-card');
+        card.style.transition = '0.5s';
+        card.style.borderColor = '#52c41a';
+        card.style.background = '#f6ffed';
+        btn.parentElement.innerHTML = '<div style="text-align:center; color:#52c41a; font-weight:bold; padding:6px"><i class="fas fa-check-circle"></i> 已接受挑战! PK即将开始</div>';
+        showToast('挑战已接受! PK即将开始', 'success');
+        updateBadge(-1);
+    }
+    function handleRejectPK(btn) {
+        if (!confirm('确定要拒绝这个挑战吗？')) return;
+        const card = btn.closest('.pk-card');
+        card.style.transition = '0.5s';
+        card.style.opacity = '0.4';
+        btn.parentElement.innerHTML = '<div style="text-align:center; color:#999; padding:6px"><i class="fas fa-times-circle"></i> 已拒绝</div>';
+        showToast('已拒绝挑战', 'warning');
+        updateBadge(-1);
+    }
+    function handleAcceptFromPopover(btn) {
+        btn.parentElement.innerHTML = '<span style="color:#52c41a; font-weight:bold; font-size:12px"><i class="fas fa-check"></i> 已接受!</span>';
+        showToast('挑战已接受!', 'success');
+        updateBadge(-1);
+    }
+    function handleRejectFromPopover(btn) {
+        btn.parentElement.innerHTML = '<span style="color:#999; font-size:12px">已拒绝</span>';
+        updateBadge(-1);
+    }
+    function handleAcceptInModal() {
+        showToast('挑战已接受! PK即将开始!', 'success');
+        closeModal('inviteDetailModal');
+        closeModal('inviteGroupModal');
+        updateBadge(-1);
+    }
+    function handleRejectInModal() {
+        if (!confirm('确定要拒绝这个挑战吗？')) return;
+        showToast('已拒绝挑战', 'warning');
+        closeModal('inviteDetailModal');
+        closeModal('inviteGroupModal');
+        updateBadge(-1);
+    }
+    function handleWithdraw() {
+        if (!confirm('确定撤回该邀请吗？撤回后对方将不再看到此挑战。')) return;
+        showToast('邀请已撤回', 'warning');
+        closeModal('pendingDetailModal');
+    }
+
+    // Badge update
+    function updateBadge(delta) {
+        const badge = document.getElementById('badgeCount');
+        let count = parseInt(badge.textContent) + delta;
+        if (count < 0) count = 0;
+        badge.textContent = count;
+        badge.classList.remove('badge-bounce');
+        void badge.offsetWidth;
+        badge.classList.add('badge-bounce');
+        if (count === 0) badge.style.display = 'none';
+    }
+
+    // Filter PK cards
+    function filterPKCards(status, tabEl) {
+        document.querySelectorAll('#pkStatusTabs .pk-tab').forEach(t => t.classList.remove('active'));
+        tabEl.classList.add('active');
+        document.querySelectorAll('#pkGrid .pk-card').forEach(card => {
+            if (status === 'all') {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = card.dataset.status === status ? 'flex' : 'none';
+            }
+        });
+    }
+    function filterByType(type, el) {
+        document.querySelectorAll('.type-filter').forEach(f => f.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelectorAll('#pkGrid .pk-card').forEach(card => {
+            if (type === 'all') {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = card.dataset.type === type ? 'flex' : 'none';
+            }
+        });
+    }
+
+    // Toast notification
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        const colors = { success: '#52c41a', warning: '#faad14', error: '#ff4d4f', info: '#1890ff' };
+        const icons = { success: 'check-circle', warning: 'exclamation-circle', error: 'times-circle', info: 'info-circle' };
+        toast.style.cssText = `position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#fff; padding:12px 24px; border-radius:4px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:5000; display:flex; align-items:center; gap:8px; font-size:14px; border-left:4px solid ${colors[type]}; animation:fadeIn 0.3s ease;`;
+        toast.innerHTML = `<i class="fas fa-${icons[type]}" style="color:${colors[type]}; font-size:16px"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.transition = '0.3s'; toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(-20px)'; setTimeout(() => toast.remove(), 300); }, 2500);
+    }
+
+    // PK Bar animation
+    let scoreA = 314440, scoreB = 280000, isAnim = false;
+    function handleAttack(player, amount) {
+        if (isAnim) return; isAnim = true;
+        if (isPkCollapsed) togglePkBar();
+        const atkId = player === 'A' ? 'avatarA' : 'avatarB';
+        const defId = player === 'A' ? 'avatarB' : 'avatarA';
+        const icon = player === 'A' ? '🚀' : '💣';
+        fireProjectile(atkId, defId, icon, () => {
+            if (player === 'A') scoreA += amount; else scoreB += amount;
+            updateBarUI();
+            shakeAvatar(defId);
+            showExplosion(defId);
+            showFloatNum(defId, amount, player);
+            isAnim = false;
+        });
+    }
+    function fireProjectile(fromId, toId, icon, callback) {
+        const r1 = document.getElementById(fromId).getBoundingClientRect();
+        const r2 = document.getElementById(toId).getBoundingClientRect();
+        const p = document.createElement('div'); p.className = 'projectile'; p.innerText = icon; document.body.appendChild(p);
+        const startX = r1.left + r1.width / 2, startY = r1.top + r1.height / 2;
+        const endX = r2.left + r2.width / 2, endY = r2.top + r2.height / 2;
+        const cX = (startX + endX) / 2, cY = Math.min(startY, endY) + 80;
+        const duration = 600, t0 = performance.now();
+        function loop(now) {
+            let pTime = (now - t0) / duration;
+            if (pTime > 1) { p.remove(); callback(); return; }
+            const x = (1 - pTime) ** 2 * startX + 2 * (1 - pTime) * pTime * cX + pTime ** 2 * endX;
+            const y = (1 - pTime) ** 2 * startY + 2 * (1 - pTime) * pTime * cY + pTime ** 2 * endY;
+            p.style.left = x + 'px'; p.style.top = y + 'px';
+            p.style.transform = `translate(-50%, -50%) rotate(${pTime * 720}deg)`;
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    }
+    function updateBarUI() {
+        const total = scoreA + scoreB;
+        const perA = Math.round((scoreA / total) * 100);
+        const perB = 100 - perA;
+        document.getElementById('barA').style.width = perA + '%';
+        document.getElementById('barB').style.width = perB + '%';
+        document.getElementById('vsBadge').style.left = perA + '%';
+        document.getElementById('scoreA').innerText = scoreA.toLocaleString();
+        document.getElementById('scoreB').innerText = scoreB.toLocaleString();
+        document.getElementById('ratioA').innerText = perA + '%';
+        document.getElementById('ratioB').innerText = perB + '%';
+    }
+    function shakeAvatar(id) { const el = document.getElementById(id); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+    function showExplosion(id) {
+        const rect = document.getElementById(id).getBoundingClientRect();
+        const div = document.createElement('div'); div.className = 'explosion'; div.innerText = '💥';
+        div.style.left = (rect.left + rect.width / 2) + 'px'; div.style.top = (rect.top + rect.height / 2) + 'px';
+        document.body.appendChild(div); setTimeout(() => div.remove(), 600);
+    }
+    function showFloatNum(id, num, player) {
+        const rect = document.getElementById(id).getBoundingClientRect();
+        const div = document.createElement('div'); div.className = 'float-num'; div.innerText = '+' + num;
+        div.style.color = player === 'A' ? '#1890ff' : '#f5222d';
+        div.style.left = (rect.left + 10) + 'px'; div.style.top = (rect.top + 30) + 'px';
+        document.body.appendChild(div); setTimeout(() => div.remove(), 1000);
+    }
+
+    // Init checkbox styles
+    document.querySelectorAll('.checkbox-label').forEach(label => {
+        const cb = label.querySelector('input');
+        if (cb && cb.checked) label.classList.add('checked');
+    });
+</script>
+</body>
+</html>
