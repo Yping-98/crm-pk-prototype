@@ -384,7 +384,7 @@
 
         /* Danmaku (弹幕) in top nav */
         .danmaku-track { position: absolute; top: 0; left: 120px; right: 200px; height: 100%; overflow: hidden; pointer-events: none; z-index: 15; }
-        .danmaku-item { position: absolute; white-space: nowrap; will-change: transform; display: flex; align-items: center; gap: 8px; padding: 4px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; top: 50%; transform: translateY(-50%); animation: danmakuScroll var(--danmaku-duration, 12s) linear forwards; }
+        .danmaku-item { position: absolute; white-space: nowrap; will-change: transform; display: flex; align-items: center; gap: 8px; padding: 4px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; top: 50%; transform: translateY(-50%); animation: danmakuScroll var(--danmaku-duration, 20s) linear forwards; }
         .danmaku-item .dm-trophy { font-size: 18px; }
         .danmaku-item .dm-result { display: flex; align-items: center; gap: 6px; }
         .danmaku-item .dm-winner { color: #fa8c16; }
@@ -1984,7 +1984,7 @@
         const track = document.getElementById('danmakuTrack');
         let totalRound = 0;
         const maxRounds = 3;
-        const delayPerItem = 3500;
+        const delayPerItem = 5500;
 
         function launchRound() {
             if (totalRound >= maxRounds) return;
@@ -1992,7 +1992,7 @@
                 const timer = setTimeout(() => {
                     const dm = document.createElement('div');
                     dm.className = `danmaku-item ${result.winner === 'liyingping' || result.winner.includes('一') ? 'danmaku-win' : 'danmaku-lose'}`;
-                    dm.style.setProperty('--danmaku-duration', '10s');
+                    dm.style.setProperty('--danmaku-duration', '18s');
                     dm.innerHTML = `
                         <span class="dm-trophy">${result.winner === 'liyingping' || result.winner.includes('一') ? '🏆' : '🎖️'}</span>
                         <span style="color:#333; font-size:12px">[${result.type}]</span>
