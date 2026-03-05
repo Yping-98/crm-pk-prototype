@@ -434,6 +434,18 @@
         .motivate-text::before { content: '"'; font-size: 28px; color: #faad14; position: absolute; top: 2px; left: 6px; line-height: 1; }
         .motivate-text .mt-content { padding-left: 16px; }
 
+        /* Watch/Subscribe button */
+        .watch-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #999; cursor: pointer; transition: 0.2s; padding: 2px 8px; border-radius: 10px; border: 1px solid transparent; }
+        .watch-btn:hover { color: #fa8c16; border-color: #ffd591; background: #fffbe6; }
+        .watch-btn.watching { color: #fa8c16; border-color: #ffd591; background: #fffbe6; }
+        .watch-btn i { font-size: 10px; }
+        .watch-count { font-size: 10px; color: #bbb; margin-left: 2px; }
+
+        /* Squad tip */
+        .squad-tip { display: none; padding: 10px 14px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 4px; font-size: 13px; color: #096dd9; margin-bottom: 16px; align-items: flex-start; gap: 8px; animation: fadeIn 0.3s ease; }
+        .squad-tip.show { display: flex; }
+        .squad-tip i { margin-top: 2px; flex-shrink: 0; }
+
         /* Notification badge animation */
         @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         .badge-bounce { animation: bounce 0.3s ease; }
@@ -594,7 +606,7 @@
                         <span style="font-weight:900; color:#ddd; font-style:italic">VS</span>
                         <div class="side-group">李强 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" class="side-img"></div>
                     </div>
-                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 2 天</span><span class="link-btn">查看详情</span></div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 2 天</span><span style="display:flex; align-items:center; gap:10px"><span class="watch-btn watching" onclick="event.stopPropagation(); toggleWatch(this)"><i class="fas fa-eye"></i> 观战中 <span class="watch-count">18人</span></span><span class="link-btn">查看详情</span></span></div>
                 </div>
 
                 <!-- Card 2: 小组PK - 进行中 -->
@@ -624,7 +636,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 5 天</span><span class="link-btn">查看详情</span></div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 5 天</span><span style="display:flex; align-items:center; gap:10px"><span class="watch-btn" onclick="event.stopPropagation(); toggleWatch(this)"><i class="far fa-eye"></i> 观战 <span class="watch-count">7人</span></span><span class="link-btn">查看详情</span></span></div>
                 </div>
 
                 <!-- Card 3: 团队PK - 进行中 -->
@@ -654,7 +666,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 31 天</span><span class="link-btn">查看详情</span></div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 31 天</span><span style="display:flex; align-items:center; gap:10px"><span class="watch-btn" onclick="event.stopPropagation(); toggleWatch(this)"><i class="far fa-eye"></i> 观战 <span class="watch-count">32人</span></span><span class="link-btn">查看详情</span></span></div>
                 </div>
 
                 <!-- Card 4: 组队PK - 进行中 -->
@@ -682,7 +694,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 15 天</span><span class="link-btn">查看详情</span></div>
+                    <div class="pk-c-footer"><span><i class="far fa-clock"></i> 剩余 15 天</span><span style="display:flex; align-items:center; gap:10px"><span class="watch-btn" onclick="event.stopPropagation(); toggleWatch(this)"><i class="far fa-eye"></i> 观战 <span class="watch-count">5人</span></span><span class="link-btn">查看详情</span></span></div>
                 </div>
 
                 <!-- Card 5: 个人PK - 待我接受 -->
@@ -880,6 +892,12 @@
                         <small>自由组队跨部门</small>
                     </div>
                 </div>
+            </div>
+
+            <!-- 组队PK提示 -->
+            <div class="squad-tip" id="squadTip">
+                <i class="fas fa-lightbulb" style="color:#faad14; font-size:15px"></i>
+                <div><strong>老带新模式：</strong>组队PK主要适用于老带新的场景，由经验丰富的老员工与新员工自由组队，跨部门协作PK，以老带新、以赛促学，快速提升新人战斗力。</div>
             </div>
 
             <!-- 发起方 -->
@@ -1648,6 +1666,9 @@
         if (type === 'team') document.getElementById('opponentTeam').classList.remove('hidden');
         if (type === 'squad') document.getElementById('opponentSquad').classList.remove('hidden');
 
+        const squadTip = document.getElementById('squadTip');
+        if (type === 'squad') { squadTip.classList.add('show'); } else { squadTip.classList.remove('show'); }
+
         const def = initiatorDefaults[type];
         document.getElementById('initiatorAvatar').style.background = def.color;
         document.getElementById('initiatorAvatar').textContent = def.letter;
@@ -2082,7 +2103,7 @@
         panel.classList.add('show');
         document.getElementById('compareOppName').textContent = oppName;
 
-        let myWins = 0;
+        let weightedScore = 0;
         let totalMetrics = metrics.length;
         let rowsHTML = '';
 
@@ -2093,8 +2114,9 @@
             const myPct = Math.round((myVal / total) * 100);
             const oppPct = 100 - myPct;
             const unit = metricUnits[metric] || '';
-            const meWin = myVal >= oppVal;
-            if (meWin) myWins++;
+
+            // Weighted score: my share in each metric (0~1)
+            weightedScore += myVal / total;
 
             const fmtMe = unit === '¥' ? '¥' + myVal.toLocaleString() : myVal.toLocaleString() + (unit === '%' ? '%' : '');
             const fmtOpp = unit === '¥' ? '¥' + oppVal.toLocaleString() : oppVal.toLocaleString() + (unit === '%' ? '%' : '');
@@ -2121,8 +2143,10 @@
         document.getElementById('compareMeTotal').className = 'cs-val ' + (myMain >= oppMain ? 'winning' : 'losing');
         document.getElementById('compareOppTotal').className = 'cs-val ' + (myMain >= oppMain ? 'losing' : 'winning');
 
-        const winrate = Math.round((myWins / totalMetrics) * 100);
-        const level = winrate >= 60 ? 'high' : winrate >= 40 ? 'mid' : 'low';
+        // Weighted winrate: average of per-metric shares, with 15% floor (everyone has a chance)
+        let rawRate = Math.round((weightedScore / totalMetrics) * 100);
+        const winrate = Math.max(15, Math.min(90, rawRate));
+        const level = winrate >= 55 ? 'high' : winrate >= 40 ? 'mid' : 'low';
         const pctEl = document.getElementById('winratePct');
         pctEl.textContent = winrate + '%';
         pctEl.className = 'winrate-pct ' + level;
@@ -2160,6 +2184,22 @@
         _origSelectPKType(el, type);
         updateDataComparison();
     };
+
+    // ========== 观战订阅 ==========
+    function toggleWatch(el) {
+        const isWatching = el.classList.contains('watching');
+        const countEl = el.querySelector('.watch-count');
+        let count = parseInt(countEl.textContent) || 0;
+        if (isWatching) {
+            el.classList.remove('watching');
+            el.innerHTML = `<i class="far fa-eye"></i> 观战 <span class="watch-count">${Math.max(0, count - 1)}人</span>`;
+            showToast('已取消观战订阅', 'info');
+        } else {
+            el.classList.add('watching');
+            el.innerHTML = `<i class="fas fa-eye"></i> 观战中 <span class="watch-count">${count + 1}人</span>`;
+            showToast('已订阅观战! PK动态将实时推送给你', 'success');
+        }
+    }
 </script>
 </body>
 </html>
