@@ -2203,41 +2203,38 @@
     function triggerPKEndDanmaku() {
         clearDanmaku();
         const track = document.getElementById('danmakuTrack');
-        let totalRound = 0;
+        const duration = 20;
         const maxRounds = 3;
-        const delayPerItem = 5500;
+        let idx = 0, round = 0;
 
-        function launchRound() {
-            if (totalRound >= maxRounds) return;
-            pkEndResults.forEach((result, idx) => {
-                const timer = setTimeout(() => {
-                    const dm = document.createElement('div');
-                    dm.className = `danmaku-item ${result.winner === 'liyingping' || result.winner.includes('一') ? 'danmaku-win' : 'danmaku-lose'}`;
-                    dm.style.setProperty('--danmaku-duration', '18s');
-                    dm.innerHTML = `
-                        <span class="dm-trophy">${result.winner === 'liyingping' || result.winner.includes('一') ? '🏆' : '🎖️'}</span>
-                        <span style="color:#333; font-size:12px">[${result.type}]</span>
-                        <span style="color:#333">${result.name}</span>
-                        <span class="dm-result">
-                            <span class="dm-winner">${result.winner}</span>
-                            <span class="dm-score blue" style="color:#1890ff">${result.wScore}</span>
-                            <span class="dm-vs">vs</span>
-                            <span class="dm-loser">${result.loser}</span>
-                            <span class="dm-score" style="color:#999">${result.lScore}</span>
-                        </span>
-                        <span style="font-size:12px">${result.winner === 'liyingping' || result.winner.includes('一') ? '🎉 胜利!' : ''}</span>`;
-                    track.appendChild(dm);
-                    dm.addEventListener('animationend', () => dm.remove());
-                }, idx * delayPerItem + totalRound * pkEndResults.length * delayPerItem);
+        function launchNext() {
+            if (round >= maxRounds) return;
+            const result = pkEndResults[idx];
+            const dm = document.createElement('div');
+            dm.className = `danmaku-item ${result.winner === 'liyingping' || result.winner.includes('一') ? 'danmaku-win' : 'danmaku-lose'}`;
+            dm.style.setProperty('--danmaku-duration', duration + 's');
+            dm.innerHTML = `
+                <span class="dm-trophy">${result.winner === 'liyingping' || result.winner.includes('一') ? '🏆' : '🎖️'}</span>
+                <span style="color:#333; font-size:12px">[${result.type}]</span>
+                <span style="color:#333">${result.name}</span>
+                <span class="dm-result">
+                    <span class="dm-winner">${result.winner}</span>
+                    <span class="dm-score blue" style="color:#1890ff">${result.wScore}</span>
+                    <span class="dm-vs">vs</span>
+                    <span class="dm-loser">${result.loser}</span>
+                    <span class="dm-score" style="color:#999">${result.lScore}</span>
+                </span>
+                <span style="font-size:12px">${result.winner === 'liyingping' || result.winner.includes('一') ? '🎉 胜利!' : ''}</span>`;
+            track.appendChild(dm);
+            dm.addEventListener('animationend', () => dm.remove());
+            idx++;
+            if (idx >= pkEndResults.length) { idx = 0; round++; }
+            if (round < maxRounds) {
+                const timer = setTimeout(launchNext, duration * 0.6 * 1000);
                 danmakuTimers.push(timer);
-            });
-            totalRound++;
-            if (totalRound < maxRounds) {
-                const nextTimer = setTimeout(launchRound, 0);
-                danmakuTimers.push(nextTimer);
             }
         }
-        launchRound();
+        launchNext();
     }
 
     function clearDanmaku() {
