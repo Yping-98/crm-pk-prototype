@@ -2460,23 +2460,26 @@
             { text: '🎖️ 个人PK · 二月对决赛 · 🔥 赵明 ¥55,100 vs 张伟 ¥41,600', isWin: false },
             { text: '🏆 团队PK · Q1冲刺团战 · 🔥 销售一部 ¥628,400 vs 销售二部 ¥616,100 🎉', isWin: true },
         ];
-        let round = 0;
-        function launch() {
-            if (round >= 3) return;
-            items.forEach((item, i) => {
-                const t = setTimeout(() => {
-                    const dm = document.createElement('div');
-                    dm.style.cssText = 'position:absolute;white-space:nowrap;top:50%;transform:translateY(-50%);padding:6px 20px;border-radius:22px;font-size:14px;font-weight:700;color:#fff;animation:pkDmScroll 16s linear forwards;font-family:inherit;text-shadow:0 1px 2px rgba(0,0,0,0.3);' + (item.isWin ? 'background:linear-gradient(90deg,rgba(255,215,0,0.85),rgba(250,140,22,0.75));border:1px solid rgba(255,215,0,0.6)' : 'background:linear-gradient(90deg,rgba(24,144,255,0.75),rgba(47,84,235,0.65));border:1px solid rgba(24,144,255,0.5)');
-                    dm.textContent = item.text;
-                    track.appendChild(dm);
-                    dm.addEventListener('animationend', () => dm.remove());
-                }, i * 4500 + round * items.length * 4500);
+        const dmDuration = 18;
+        const interval = dmDuration + 2;
+        let idx = 0, round = 0, maxRounds = 3;
+        function launchNext() {
+            if (round >= maxRounds) return;
+            const item = items[idx];
+            const dm = document.createElement('div');
+            const fs = Math.max(10, Math.min(14, track.offsetWidth / 80));
+            dm.style.cssText = `position:absolute;white-space:nowrap;top:50%;transform:translateY(-50%);padding:0.4em 1.2em;border-radius:1.4em;font-size:${fs}px;font-weight:700;color:#fff;animation:pkDmScroll ${dmDuration}s linear forwards;font-family:inherit;text-shadow:0 1px 2px rgba(0,0,0,0.3);` + (item.isWin ? 'background:linear-gradient(90deg,rgba(255,215,0,0.85),rgba(250,140,22,0.75));border:1px solid rgba(255,215,0,0.6)' : 'background:linear-gradient(90deg,rgba(24,144,255,0.75),rgba(47,84,235,0.65));border:1px solid rgba(24,144,255,0.5)');
+            dm.textContent = item.text;
+            track.appendChild(dm);
+            dm.addEventListener('animationend', () => dm.remove());
+            idx++;
+            if (idx >= items.length) { idx = 0; round++; }
+            if (round < maxRounds) {
+                const t = setTimeout(launchNext, (dmDuration * 0.55) * 1000);
                 dashDmTimers.push(t);
-            });
-            round++;
-            if (round < 3) { const nt = setTimeout(launch, 0); dashDmTimers.push(nt); }
+            }
         }
-        launch();
+        launchNext();
     }
     function stopDashDanmaku() {
         dashDmTimers.forEach(t => clearTimeout(t));
@@ -2513,28 +2516,28 @@
         }).join('');
 
         container.innerHTML = `
-            <div style="width:600px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);border:2px solid rgba(255,215,0,0.4);box-shadow:0 0 50px rgba(255,215,0,0.25),0 20px 50px rgba(0,0,0,0.5);animation:fadeIn 0.5s ease;position:relative">
+            <div class="pk-bc-card">
                 <div style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden">${confettiHTML}</div>
-                <div style="background:linear-gradient(90deg,#d4380d,#fa541c,#d4380d);padding:14px 20px;text-align:center;font-size:20px;font-weight:900;color:#fff;letter-spacing:5px;text-shadow:0 2px 4px rgba(0,0,0,0.3)">⚔️ PK结束播报 ⚔️</div>
-                <div style="padding:28px 36px;display:flex;align-items:center;justify-content:center;gap:24px">
-                    <div style="text-align:center;min-width:150px">
-                        <div style="font-size:32px;animation:crownBounce 0.8s infinite alternate">👑</div>
-                        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#fa8c16);box-shadow:0 0 16px rgba(255,215,0,0.5);border:2px solid #ffd700;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px">${b.wLetter}</div>
-                        <div style="font-size:16px;font-weight:700;color:#fff">${b.winner}</div>
-                        <div style="font-size:22px;font-weight:900;background:linear-gradient(180deg,#ffd700,#fa8c16);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${b.wScore}</div>
-                        <div style="background:linear-gradient(90deg,#ffd700,#fa8c16);color:#fff;font-size:11px;padding:2px 10px;border-radius:10px;display:inline-block;margin-top:4px">🏆 胜出</div>
+                <div class="bc-hdr">⚔️ PK结束播报 ⚔️</div>
+                <div class="bc-body">
+                    <div class="bc-player">
+                        <div class="bc-crown">👑</div>
+                        <div class="bc-avatar win">${b.wLetter}</div>
+                        <div class="bc-name">${b.winner}</div>
+                        <div class="bc-score-win">${b.wScore}</div>
+                        <div class="bc-badge" style="background:linear-gradient(90deg,#ffd700,#fa8c16);color:#fff">🏆 胜出</div>
                     </div>
-                    <div style="font-size:28px;font-weight:900;color:#fa541c;text-shadow:0 0 16px rgba(250,84,28,0.4)">VS</div>
-                    <div style="text-align:center;min-width:150px">
-                        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#8c8c8c,#595959);border:2px solid #8c8c8c;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;margin-top:40px">${b.lLetter}</div>
-                        <div style="font-size:16px;font-weight:700;color:#fff">${b.loser}</div>
-                        <div style="font-size:18px;font-weight:900;color:#8c8c8c">${b.lScore}</div>
-                        <div style="background:rgba(255,255,255,0.15);color:#bfbfbf;font-size:11px;padding:2px 10px;border-radius:10px;display:inline-block;margin-top:4px">惜败</div>
+                    <div class="bc-vs">VS</div>
+                    <div class="bc-player" style="padding-top:2em">
+                        <div class="bc-avatar lose">${b.lLetter}</div>
+                        <div class="bc-name">${b.loser}</div>
+                        <div class="bc-score-lose">${b.lScore}</div>
+                        <div class="bc-badge" style="background:rgba(255,255,255,0.15);color:#bfbfbf">惜败</div>
                     </div>
                 </div>
-                <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-top:1px solid rgba(255,255,255,0.1)">
-                    <span style="background:rgba(250,84,28,0.2);color:#fa541c;padding:3px 12px;border-radius:10px;font-size:12px;font-weight:600">${b.type} · ${b.title}</span>
-                    <span style="color:rgba(255,255,255,0.4);font-size:11px;margin-left:10px">${new Date().toLocaleString('zh-CN')}</span>
+                <div class="bc-footer">
+                    <span style="background:rgba(250,84,28,0.2);color:#fa541c;padding:3px 12px;border-radius:10px;font-weight:600">${b.type} · ${b.title}</span>
+                    <span style="color:rgba(255,255,255,0.4);margin-left:10px">${new Date().toLocaleString('zh-CN')}</span>
                 </div>
             </div>
         `;
@@ -2561,134 +2564,158 @@
         <div class="dash-preview-close" onclick="closeDashboardPreview()">&times;</div>
     </div>
     <div class="dash-preview-frame" id="dashPreviewFrame">
-        <!-- ===== 内置数据大盘 ===== -->
-        <div id="builtinDashboard" style="width:100%;height:100%;overflow:hidden;font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;background:linear-gradient(180deg,#7a1515 0%,#a01010 30%,#8b0e0e 100%);color:#fff;position:relative">
-            <!-- 顶部栏 -->
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 24px;background:rgba(0,0,0,0.5);position:relative;z-index:5">
-                <span style="font-size:15px;font-weight:600;letter-spacing:2px">武汉全力冲顶数据大盘</span>
-                <span style="font-size:14px;color:#ccc" id="dashClock">2026-03-05 14:00:00</span>
+        <style>
+            #builtinDashboard { width:100%;height:100%;overflow:hidden;font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',sans-serif;background:linear-gradient(180deg,#7a1515 0%,#a01010 30%,#8b0e0e 100%);color:#fff;position:relative;font-size:clamp(9px,1.1vw,14px); }
+            .db-topbar { display:flex;justify-content:space-between;align-items:center;padding:0.6em 1.6em;background:rgba(0,0,0,0.5);position:relative;z-index:5;font-size:1.1em; }
+            .db-title { text-align:center;padding:0.5em 0 0.2em;position:relative;z-index:2; }
+            .db-title-text { font-size:clamp(18px,2.4vw,32px);font-weight:900;background:linear-gradient(180deg,#ffd700,#f0c020);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:0.3em; }
+            .db-body { display:flex;padding:0 1em;gap:0.8em;height:calc(100% - clamp(70px,12vh,100px));position:relative;z-index:2; }
+            .db-col-side { width:27%;display:flex;flex-direction:column;gap:0.5em;min-width:0; }
+            .db-col-mid { flex:1;display:flex;flex-direction:column;gap:0.5em;align-items:center;min-width:0; }
+            .db-panel { background:linear-gradient(135deg,rgba(180,30,10,0.8),rgba(140,20,5,0.6));border:1px solid rgba(255,215,0,0.4);border-radius:0.5em;padding:0.6em;text-align:center; }
+            .db-table-panel { background:rgba(0,0,0,0.25);border:1px solid rgba(255,215,0,0.25);border-radius:0.5em;padding:0.5em;overflow:hidden; }
+            .db-panel-title { color:#ffd700;font-size:1.05em;font-weight:700;margin-bottom:0.3em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+            .db-big-num { font-size:clamp(20px,2.8vw,36px);font-weight:900;color:#ffd700;text-shadow:0 2px 8px rgba(255,215,0,0.4); }
+            .db-sub-text { font-size:0.85em;color:#ffb8b8; }
+            .db-name { font-size:clamp(14px,1.6vw,22px);font-weight:800;color:#fff; }
+            .db-tbl { width:100%;font-size:0.9em;border-collapse:collapse; }
+            .db-tbl td { padding:0.2em 0.3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0; }
+            .db-tbl .col-rank { width:2.5em; }
+            .db-tbl .col-name { width:auto; }
+            .db-tbl .col-val { text-align:right; }
+            .db-tbl .col-grp { text-align:right;font-size:0.85em;color:#ccc;max-width:5em; }
+            .db-tbl tr.gold { background:rgba(255,215,0,0.15); }
+            .db-tbl tr.silver { background:rgba(192,192,192,0.1); }
+            .db-tbl tr.bronze { background:rgba(205,127,50,0.1); }
+            .db-tbl .hdr { color:#ffb8b8;border-bottom:1px solid rgba(255,255,255,0.1); }
+            .db-stat-row { display:flex;gap:clamp(8px,1.2vw,20px);width:100%;justify-content:center; }
+            .db-stat-box { background:rgba(0,0,0,0.3);border:1px solid rgba(255,215,0,0.3);border-radius:0.5em;padding:0.5em 1em;text-align:center;flex:1;min-width:0; }
+            .db-stat-val { font-size:clamp(18px,2.2vw,32px);font-weight:900;color:#ffd700; }
+            .db-stat-val span { font-size:0.55em; }
+            .db-progress { width:80%;margin:0.3em 0; }
+            .db-progress-bar { height:clamp(10px,1.5vh,18px);background:rgba(0,0,0,0.3);border-radius:1em;overflow:hidden;position:relative; }
+            .db-progress-fill { width:10.4%;height:100%;background:linear-gradient(90deg,#ffd700,#fa8c16);border-radius:1em; }
+            .db-progress-labels { display:flex;justify-content:space-between;font-size:0.8em;color:#ccc;margin-top:0.15em; }
+            .db-champ-row { display:flex;gap:0.8em;width:100%; }
+            .db-champ { flex:1;min-width:0; }
+            .db-champ-name { font-size:clamp(14px,1.8vw,24px);font-weight:900;color:#fff;margin:0.2em 0; }
+            .db-champ-val { font-size:clamp(16px,2vw,26px);font-weight:900;color:#ffd700; }
+            #dashDanmakuTrack { position:absolute;top:0;left:0;right:0;height:clamp(30px,5vh,44px);overflow:hidden;pointer-events:none;z-index:50; }
+            #dashBroadcastOverlayInner { position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:10000;transition:opacity 0.4s; }
+            #dashBroadcastOverlayInner.show { display:flex !important; }
+            .pk-bc-card { width:clamp(340px,50vw,650px);border-radius:clamp(8px,1vw,16px);overflow:hidden;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);border:2px solid rgba(255,215,0,0.4);box-shadow:0 0 50px rgba(255,215,0,0.25),0 20px 50px rgba(0,0,0,0.5);animation:fadeIn 0.5s ease;position:relative;font-family:inherit; }
+            .pk-bc-card .bc-hdr { background:linear-gradient(90deg,#d4380d,#fa541c,#d4380d);padding:clamp(8px,1.2vh,16px) clamp(12px,1.5vw,24px);text-align:center;font-size:clamp(14px,1.8vw,22px);font-weight:900;color:#fff;letter-spacing:0.3em; }
+            .pk-bc-card .bc-body { padding:clamp(14px,2.5vh,32px) clamp(16px,2.5vw,40px);display:flex;align-items:center;justify-content:center;gap:clamp(12px,2vw,28px); }
+            .pk-bc-card .bc-player { text-align:center;min-width:clamp(80px,12vw,180px); }
+            .pk-bc-card .bc-avatar { width:clamp(40px,6vw,72px);height:clamp(40px,6vw,72px);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:clamp(16px,2.5vw,28px);font-weight:900;color:#fff; }
+            .pk-bc-card .bc-avatar.win { background:linear-gradient(135deg,#ffd700,#fa8c16);box-shadow:0 0 16px rgba(255,215,0,0.5);border:2px solid #ffd700; }
+            .pk-bc-card .bc-avatar.lose { background:linear-gradient(135deg,#8c8c8c,#595959);border:2px solid #8c8c8c; }
+            .pk-bc-card .bc-name { font-size:clamp(12px,1.4vw,18px);font-weight:700;color:#fff;margin-top:0.4em; }
+            .pk-bc-card .bc-score-win { font-size:clamp(14px,1.8vw,26px);font-weight:900;background:linear-gradient(180deg,#ffd700,#fa8c16);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+            .pk-bc-card .bc-score-lose { font-size:clamp(12px,1.4vw,22px);font-weight:900;color:#8c8c8c; }
+            .pk-bc-card .bc-badge { font-size:clamp(9px,0.9vw,12px);padding:2px 8px;border-radius:10px;display:inline-block;margin-top:0.3em; }
+            .pk-bc-card .bc-vs { font-size:clamp(18px,2.5vw,32px);font-weight:900;color:#fa541c;text-shadow:0 0 16px rgba(250,84,28,0.4); }
+            .pk-bc-card .bc-crown { font-size:clamp(20px,3vw,36px);animation:crownBounce 0.8s infinite alternate; }
+            .pk-bc-card .bc-footer { text-align:center;padding:clamp(6px,1vh,14px);background:rgba(255,255,255,0.05);border-top:1px solid rgba(255,255,255,0.1);font-size:clamp(10px,1vw,13px); }
+        </style>
+
+        <!-- ===== 内置数据大盘（自适应） ===== -->
+        <div id="builtinDashboard">
+            <div class="db-topbar">
+                <span style="font-weight:600;letter-spacing:2px">武汉全力冲顶数据大盘</span>
+                <span style="color:#ccc" id="dashClock">2026-03-05 14:00:00</span>
             </div>
+            <div id="dashDanmakuTrack"></div>
+            <div class="db-title"><div class="db-title-text">洋葱学园全力冲顶</div></div>
 
-            <!-- 弹幕轨道 -->
-            <div id="dashDanmakuTrack" style="position:absolute;top:0;left:0;right:0;height:40px;overflow:hidden;pointer-events:none;z-index:50"></div>
-
-            <!-- 主标题 -->
-            <div style="text-align:center;padding:8px 0 4px;position:relative;z-index:2">
-                <div style="font-size:28px;font-weight:900;background:linear-gradient(180deg,#ffd700,#f0c020);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:6px;text-shadow:0 2px 8px rgba(255,215,0,0.3)">洋葱学园全力冲顶</div>
-            </div>
-
-            <!-- 三栏布局 -->
-            <div style="display:flex;padding:0 16px;gap:12px;height:calc(100% - 90px);position:relative;z-index:2">
+            <div class="db-body">
                 <!-- 左栏 -->
-                <div style="width:28%;display:flex;flex-direction:column;gap:8px">
-                    <!-- 单月营收历史最高 -->
-                    <div style="background:linear-gradient(135deg,rgba(180,30,10,0.8),rgba(140,20,5,0.6));border:1px solid rgba(255,215,0,0.4);border-radius:8px;padding:10px;text-align:center">
-                        <div style="color:#ffd700;font-size:13px;font-weight:700;margin-bottom:4px">🏅 单月营收历史最高</div>
-                        <div style="font-size:32px;font-weight:900;color:#ffd700;text-shadow:0 2px 8px rgba(255,215,0,0.4)">878,780</div>
-                        <div style="font-size:11px;color:#ffb8b8;margin:2px 0">当前纪录保持者</div>
-                        <div style="font-size:20px;font-weight:800;color:#fff">李静月</div>
+                <div class="db-col-side">
+                    <div class="db-panel">
+                        <div class="db-panel-title">🏅 单月营收历史最高</div>
+                        <div class="db-big-num">878,780</div>
+                        <div class="db-sub-text">当前纪录保持者</div>
+                        <div class="db-name">李静月</div>
                     </div>
-                    <!-- 月度个人排行榜 -->
-                    <div style="flex:1;background:rgba(0,0,0,0.25);border:1px solid rgba(255,215,0,0.25);border-radius:8px;padding:8px;overflow:hidden">
-                        <div style="color:#ffd700;font-size:13px;font-weight:700;margin-bottom:6px;text-align:center">📊 月度个人排行榜</div>
-                        <table style="width:100%;font-size:11px;border-collapse:collapse">
-                            <tr style="color:#ffb8b8;border-bottom:1px solid rgba(255,255,255,0.1)"><td style="padding:3px 4px">排名</td><td>坐席名称</td><td style="text-align:right">当月营收</td><td style="text-align:right">所属小组</td></tr>
-                            <tr style="background:rgba(255,215,0,0.15)"><td style="padding:3px 4px;color:#ffd700">🥇</td><td>史航</td><td style="text-align:right">30,085</td><td style="text-align:right;font-size:10px;color:#ccc">*扬帆起航...</td></tr>
-                            <tr style="background:rgba(192,192,192,0.1)"><td style="padding:3px 4px;color:#c0c0c0">🥈</td><td>袁亚</td><td style="text-align:right">28,684</td><td style="text-align:right;font-size:10px;color:#ccc">*葱王队-...</td></tr>
-                            <tr style="background:rgba(205,127,50,0.1)"><td style="padding:3px 4px;color:#cd7f32">🥉</td><td>王涵01</td><td style="text-align:right">27,080</td><td style="text-align:right;font-size:10px;color:#ccc">*巅峰队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.4</td><td>李静月</td><td style="text-align:right">25,736</td><td style="text-align:right;font-size:10px;color:#ccc">*砂票队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.5</td><td>闵金洋</td><td style="text-align:right">24,679</td><td style="text-align:right;font-size:10px;color:#ccc">*星空队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.6</td><td>汪林文</td><td style="text-align:right">24,588</td><td style="text-align:right;font-size:10px;color:#ccc">*砂人队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.7</td><td>喻祖军</td><td style="text-align:right">24,496</td><td style="text-align:right;font-size:10px;color:#ccc">*小学四部...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.8</td><td>荣韧01</td><td style="text-align:right">24,196</td><td style="text-align:right;font-size:10px;color:#ccc">*天启队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.9</td><td>刘洋07</td><td style="text-align:right">23,843</td><td style="text-align:right;font-size:10px;color:#ccc">*天启队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.10</td><td>汪帅01</td><td style="text-align:right">23,100</td><td style="text-align:right;font-size:10px;color:#ccc">*砂票队-...</td></tr>
+                    <div class="db-table-panel" style="flex:1">
+                        <div class="db-panel-title">📊 月度个人排行榜</div>
+                        <table class="db-tbl">
+                            <tr class="hdr"><td class="col-rank">排名</td><td class="col-name">坐席</td><td class="col-val">营收</td><td class="col-grp">小组</td></tr>
+                            <tr class="gold"><td class="col-rank" style="color:#ffd700">🥇</td><td>史航</td><td class="col-val">30,085</td><td class="col-grp">*扬帆起航</td></tr>
+                            <tr class="silver"><td class="col-rank" style="color:#c0c0c0">🥈</td><td>袁亚</td><td class="col-val">28,684</td><td class="col-grp">*葱王队</td></tr>
+                            <tr class="bronze"><td class="col-rank" style="color:#cd7f32">🥉</td><td>王涵01</td><td class="col-val">27,080</td><td class="col-grp">*巅峰队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">4</td><td>李静月</td><td class="col-val">25,736</td><td class="col-grp">*砂票队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">5</td><td>闵金洋</td><td class="col-val">24,679</td><td class="col-grp">*星空队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">6</td><td>汪林文</td><td class="col-val">24,588</td><td class="col-grp">*砂人队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">7</td><td>喻祖军</td><td class="col-val">24,496</td><td class="col-grp">*小学四部</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">8</td><td>荣韧01</td><td class="col-val">24,196</td><td class="col-grp">*天启队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">9</td><td>刘洋07</td><td class="col-val">23,843</td><td class="col-grp">*天启队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">10</td><td>汪帅01</td><td class="col-val">23,100</td><td class="col-grp">*砂票队</td></tr>
                         </table>
                     </div>
                 </div>
 
                 <!-- 中栏 -->
-                <div style="flex:1;display:flex;flex-direction:column;gap:8px;align-items:center">
-                    <!-- 本月目标 & 营收 -->
-                    <div style="display:flex;gap:20px;width:100%;justify-content:center">
-                        <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,215,0,0.3);border-radius:8px;padding:10px 24px;text-align:center;min-width:160px">
-                            <div style="font-size:12px;color:#ffb8b8">本月总目标</div>
-                            <div style="font-size:30px;font-weight:900;color:#ffd700">2343<span style="font-size:16px">万</span></div>
-                        </div>
-                        <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,215,0,0.3);border-radius:8px;padding:10px 24px;text-align:center;min-width:160px">
-                            <div style="font-size:12px;color:#ffb8b8">本月总营收</div>
-                            <div style="font-size:30px;font-weight:900;color:#ffd700">243<span style="font-size:16px">万</span></div>
-                        </div>
+                <div class="db-col-mid">
+                    <div class="db-stat-row">
+                        <div class="db-stat-box"><div class="db-sub-text">本月总目标</div><div class="db-stat-val">2343<span>万</span></div></div>
+                        <div class="db-stat-box"><div class="db-sub-text">本月总营收</div><div class="db-stat-val">243<span>万</span></div></div>
                     </div>
-                    <!-- 进度条 -->
-                    <div style="width:80%;margin:4px 0">
-                        <div style="height:16px;background:rgba(0,0,0,0.3);border-radius:8px;overflow:hidden;position:relative">
-                            <div style="width:10.4%;height:100%;background:linear-gradient(90deg,#ffd700,#fa8c16);border-radius:8px;position:relative">
-                                <span style="position:absolute;right:-20px;top:-18px;font-size:10px;color:#ffd700">10.4%</span>
-                            </div>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;font-size:10px;color:#ccc;margin-top:2px"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+                    <div class="db-progress">
+                        <div class="db-progress-bar"><div class="db-progress-fill"></div></div>
+                        <div class="db-progress-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
                     </div>
-                    <!-- 冲顶人形图 -->
-                    <div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:0.2;font-size:80px;color:#ffd700">
-                        🏔️
-                    </div>
-                    <!-- 今日 & 本周冠军 -->
-                    <div style="display:flex;gap:16px;width:100%">
-                        <div style="flex:1;background:linear-gradient(135deg,rgba(180,30,10,0.8),rgba(140,20,5,0.6));border:1px solid rgba(255,215,0,0.4);border-radius:8px;padding:10px;text-align:center">
-                            <div style="color:#ffd700;font-size:12px;font-weight:700">🏆 今日个人业绩冠军</div>
-                            <div style="font-size:22px;font-weight:900;color:#fff;margin:4px 0">郑思琪</div>
-                            <div style="font-size:10px;color:#ffb8b8">当日营收</div>
-                            <div style="font-size:24px;font-weight:900;color:#ffd700">6,396</div>
+                    <div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:0.15;font-size:clamp(40px,8vh,80px)">🏔️</div>
+                    <div class="db-champ-row">
+                        <div class="db-panel db-champ">
+                            <div class="db-panel-title">🏆 今日业绩冠军</div>
+                            <div class="db-champ-name">郑思琪</div>
+                            <div class="db-sub-text">当日营收</div>
+                            <div class="db-champ-val">6,396</div>
                         </div>
-                        <div style="flex:1;background:linear-gradient(135deg,rgba(180,30,10,0.8),rgba(140,20,5,0.6));border:1px solid rgba(255,215,0,0.4);border-radius:8px;padding:10px;text-align:center">
-                            <div style="color:#ffd700;font-size:12px;font-weight:700">🏆 本周个人业绩冠军</div>
-                            <div style="font-size:22px;font-weight:900;color:#fff;margin:4px 0">史航</div>
-                            <div style="font-size:10px;color:#ffb8b8">一周营收</div>
-                            <div style="font-size:24px;font-weight:900;color:#ffd700">29,587</div>
+                        <div class="db-panel db-champ">
+                            <div class="db-panel-title">🏆 本周业绩冠军</div>
+                            <div class="db-champ-name">史航</div>
+                            <div class="db-sub-text">一周营收</div>
+                            <div class="db-champ-val">29,587</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 右栏 -->
-                <div style="width:28%;display:flex;flex-direction:column;gap:8px">
-                    <!-- 个人当配转化排行榜 -->
-                    <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,215,0,0.25);border-radius:8px;padding:8px;overflow:hidden">
-                        <div style="color:#ffd700;font-size:13px;font-weight:700;margin-bottom:6px;text-align:center">⭐ 个人当配转化排行榜</div>
-                        <table style="width:100%;font-size:11px;border-collapse:collapse">
-                            <tr style="color:#ffb8b8;border-bottom:1px solid rgba(255,255,255,0.1)"><td style="padding:3px 4px">排名</td><td>坐席名称</td><td style="text-align:right">所属团队</td><td style="text-align:right">总金额</td></tr>
-                            <tr style="background:rgba(255,215,0,0.15)"><td style="padding:3px 4px;color:#ffd700">🥇</td><td>郭文倩01</td><td style="text-align:right;font-size:10px;color:#ccc">星火军团</td><td style="text-align:right;color:#ffd700">6,198</td></tr>
-                            <tr style="background:rgba(192,192,192,0.1)"><td style="padding:3px 4px;color:#c0c0c0">🥈</td><td>周梦雪01</td><td style="text-align:right;font-size:10px;color:#ccc">星火军团</td><td style="text-align:right">5,394</td></tr>
-                            <tr style="background:rgba(205,127,50,0.1)"><td style="padding:3px 4px;color:#cd7f32">🥉</td><td>邹奔</td><td style="text-align:right;font-size:10px;color:#ccc">星火军团</td><td style="text-align:right">5,298</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.4</td><td>程雅妮01</td><td style="text-align:right;font-size:10px;color:#ccc">星火军团</td><td style="text-align:right">4,455</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.5</td><td>史航</td><td style="text-align:right;font-size:10px;color:#ccc">星火军团</td><td style="text-align:right">4,299</td></tr>
+                <div class="db-col-side">
+                    <div class="db-table-panel">
+                        <div class="db-panel-title">⭐ 当配转化排行榜</div>
+                        <table class="db-tbl">
+                            <tr class="hdr"><td class="col-rank">排名</td><td class="col-name">坐席</td><td class="col-grp">团队</td><td class="col-val">金额</td></tr>
+                            <tr class="gold"><td class="col-rank" style="color:#ffd700">🥇</td><td>郭文倩01</td><td class="col-grp">星火军团</td><td class="col-val" style="color:#ffd700">6,198</td></tr>
+                            <tr class="silver"><td class="col-rank" style="color:#c0c0c0">🥈</td><td>周梦雪01</td><td class="col-grp">星火军团</td><td class="col-val">5,394</td></tr>
+                            <tr class="bronze"><td class="col-rank" style="color:#cd7f32">🥉</td><td>邹奔</td><td class="col-grp">星火军团</td><td class="col-val">5,298</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">4</td><td>程雅妮01</td><td class="col-grp">星火军团</td><td class="col-val">4,455</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">5</td><td>史航</td><td class="col-grp">星火军团</td><td class="col-val">4,299</td></tr>
                         </table>
                     </div>
-                    <!-- 新人黑马排行榜 -->
-                    <div style="flex:1;background:rgba(0,0,0,0.25);border:1px solid rgba(255,215,0,0.25);border-radius:8px;padding:8px;overflow:hidden">
-                        <div style="color:#ffd700;font-size:13px;font-weight:700;margin-bottom:6px;text-align:center">🐴 新人黑马排行榜</div>
-                        <table style="width:100%;font-size:11px;border-collapse:collapse">
-                            <tr style="color:#ffb8b8;border-bottom:1px solid rgba(255,255,255,0.1)"><td style="padding:3px 4px">排名</td><td>坐席名称</td><td style="text-align:right">当月营收</td><td style="text-align:right">所属小组</td></tr>
-                            <tr style="background:rgba(255,215,0,0.15)"><td style="padding:3px 4px;color:#ffd700">🥇</td><td>刘洋07</td><td style="text-align:right">23,843</td><td style="text-align:right;font-size:10px;color:#ccc">*天启队-...</td></tr>
-                            <tr style="background:rgba(192,192,192,0.1)"><td style="padding:3px 4px;color:#c0c0c0">🥈</td><td>李亮01</td><td style="text-align:right">20,914</td><td style="text-align:right;font-size:10px;color:#ccc">*乘风队-...</td></tr>
-                            <tr style="background:rgba(205,127,50,0.1)"><td style="padding:3px 4px;color:#cd7f32">🥉</td><td>叶小雨01</td><td style="text-align:right">20,090</td><td style="text-align:right;font-size:10px;color:#ccc">*小学五部...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.4</td><td>郭静霏01</td><td style="text-align:right">19,188</td><td style="text-align:right;font-size:10px;color:#ccc">*砂砂队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.5</td><td>黄高翔01</td><td style="text-align:right">18,382</td><td style="text-align:right;font-size:10px;color:#ccc">*龙腾队1...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.6</td><td>吉祥01</td><td style="text-align:right">17,998</td><td style="text-align:right;font-size:10px;color:#ccc">*辉煌队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.7</td><td>王绍杭01</td><td style="text-align:right">15,044</td><td style="text-align:right;font-size:10px;color:#ccc">*梦之队-...</td></tr>
-                            <tr><td style="padding:3px 4px;color:#aaa">NO.8</td><td>袁威02</td><td style="text-align:right">14,954</td><td style="text-align:right;font-size:10px;color:#ccc">*地表最强...</td></tr>
+                    <div class="db-table-panel" style="flex:1">
+                        <div class="db-panel-title">🐴 新人黑马排行榜</div>
+                        <table class="db-tbl">
+                            <tr class="hdr"><td class="col-rank">排名</td><td class="col-name">坐席</td><td class="col-val">营收</td><td class="col-grp">小组</td></tr>
+                            <tr class="gold"><td class="col-rank" style="color:#ffd700">🥇</td><td>刘洋07</td><td class="col-val">23,843</td><td class="col-grp">*天启队</td></tr>
+                            <tr class="silver"><td class="col-rank" style="color:#c0c0c0">🥈</td><td>李亮01</td><td class="col-val">20,914</td><td class="col-grp">*乘风队</td></tr>
+                            <tr class="bronze"><td class="col-rank" style="color:#cd7f32">🥉</td><td>叶小雨01</td><td class="col-val">20,090</td><td class="col-grp">*小学五部</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">4</td><td>郭静霏01</td><td class="col-val">19,188</td><td class="col-grp">*砂砂队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">5</td><td>黄高翔01</td><td class="col-val">18,382</td><td class="col-grp">*龙腾队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">6</td><td>吉祥01</td><td class="col-val">17,998</td><td class="col-grp">*辉煌队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">7</td><td>王绍杭01</td><td class="col-val">15,044</td><td class="col-grp">*梦之队</td></tr>
+                            <tr><td class="col-rank" style="color:#aaa">8</td><td>袁威02</td><td class="col-val">14,954</td><td class="col-grp">*地表最强</td></tr>
                         </table>
                     </div>
                 </div>
             </div>
-
-            <!-- 底部装饰 -->
             <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ffd700,#fa8c16,#ffd700)"></div>
         </div>
 
         <!-- PK 播报覆盖层 -->
-        <div id="dashBroadcastOverlayInner" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:10000;transition:opacity 0.4s"></div>
-        <style>#dashBroadcastOverlayInner.show { display: flex !important; }</style>
+        <div id="dashBroadcastOverlayInner"></div>
     </div>
     <div class="dash-preview-controls">
         <button class="dash-ctrl-btn" onclick="replayDashBroadcast()"><i class="fas fa-redo"></i> 重新播报</button>
