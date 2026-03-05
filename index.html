@@ -395,6 +395,48 @@
         .danmaku-lose { background: linear-gradient(90deg, rgba(245,34,45,0.08), rgba(255,77,79,0.05)); border: 1px solid rgba(255,77,79,0.2); }
         @keyframes danmakuScroll { 0% { left: 100%; } 100% { left: -600px; } }
 
+        /* Dashboard Broadcast Preview */
+        .btn-broadcast { background: linear-gradient(90deg, #d4380d, #fa541c); color: #fff; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: 0.3s; }
+        .btn-broadcast:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,56,13,0.4); }
+        .dashboard-preview-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; z-index: 99999; display: none; flex-direction: column; }
+        .dashboard-preview-modal.show { display: flex; }
+        .dash-preview-header { color: #fff; font-size: 14px; padding: 8px 20px; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.9); position: absolute; top: 0; left: 0; right: 0; z-index: 100; height: 40px; }
+        .dash-preview-header .dash-status { background: #52c41a; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; animation: statusPulse 1.5s infinite; }
+        @keyframes statusPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .dash-preview-frame { flex: 1; width: 100%; height: 100%; overflow: hidden; position: relative; background: #1a0000; }
+        .dash-preview-frame iframe { width: 100%; height: 100%; border: none; }
+        .dash-preview-close { position: absolute; top: 6px; right: 20px; color: #fff; font-size: 22px; cursor: pointer; opacity: 0.7; transition: 0.2s; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.15); z-index: 200; }
+        .dash-preview-close:hover { opacity: 1; background: rgba(255,77,79,0.8); }
+        .dash-preview-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 200; }
+        .dash-ctrl-btn { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.2s; backdrop-filter: blur(8px); font-weight: 500; }
+        .dash-ctrl-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.5); }
+        .dash-ctrl-btn.active { background: #fa541c; border-color: #fa541c; }
+
+        /* Dashboard broadcast card (inline preview) */
+        .broadcast-preview-inline { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid rgba(255,215,0,0.3); border-radius: 10px; padding: 20px; margin-top: 16px; position: relative; overflow: hidden; }
+        .bp-confetti { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+        .bp-confetti-piece { position: absolute; width: 6px; height: 6px; animation: bpConfettiFall var(--fall-dur, 3s) linear infinite; opacity: 0.7; }
+        @keyframes bpConfettiFall { 0% { transform: translateY(-10px) rotate(0deg); opacity: 0.8; } 100% { transform: translateY(200px) rotate(720deg); opacity: 0; } }
+        .bp-header { text-align: center; font-size: 16px; font-weight: 900; color: #fa541c; margin-bottom: 16px; letter-spacing: 4px; position: relative; z-index: 1; }
+        .bp-body { display: flex; align-items: center; justify-content: center; gap: 24px; position: relative; z-index: 1; }
+        .bp-player { text-align: center; min-width: 120px; }
+        .bp-avatar { width: 52px; height: 52px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 6px; }
+        .bp-winner .bp-avatar { background: linear-gradient(135deg, #ffd700, #fa8c16); box-shadow: 0 0 16px rgba(255,215,0,0.5); border: 2px solid #ffd700; }
+        .bp-loser .bp-avatar { background: linear-gradient(135deg, #8c8c8c, #595959); border: 2px solid #8c8c8c; }
+        .bp-name { font-size: 14px; font-weight: 700; color: #fff; }
+        .bp-score { font-size: 20px; font-weight: 900; }
+        .bp-winner .bp-score { background: linear-gradient(180deg, #ffd700, #fa8c16); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .bp-loser .bp-score { color: #8c8c8c; }
+        .bp-badge { font-size: 11px; padding: 2px 10px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+        .bp-winner .bp-badge { background: linear-gradient(90deg, #ffd700, #fa8c16); color: #fff; }
+        .bp-loser .bp-badge { background: rgba(255,255,255,0.15); color: #bfbfbf; }
+        .bp-vs { font-size: 24px; font-weight: 900; color: #fa541c; text-shadow: 0 0 10px rgba(250,84,28,0.4); }
+        .bp-crown { font-size: 28px; animation: crownBounce 0.8s infinite alternate; }
+        @keyframes crownBounce { 0% { transform: translateY(0); } 100% { transform: translateY(-6px); } }
+        .bp-footer { text-align: center; margin-top: 12px; position: relative; z-index: 1; }
+        .bp-type { display: inline-block; background: rgba(250,84,28,0.2); color: #fa541c; padding: 3px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+        .bp-hint { color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 8px; }
+
         /* Data comparison panel in create PK */
         .data-compare-panel { background: linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%); border: 1px solid #b7eb8f; border-radius: 8px; padding: 16px; margin-bottom: 20px; display: none; animation: fadeIn 0.3s ease; }
         .data-compare-panel.show { display: block; }
@@ -959,6 +1001,9 @@
     <button class="btn btn-b" onclick="handleAttack('B', 6000)">+6000</button>
     <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px">
         <button class="btn" style="background:#fa8c16; font-size:11px; padding:5px 10px" onclick="triggerPKEndDanmaku()">模拟PK结束弹幕</button>
+    </div>
+    <div style="margin-top:8px; border-top:1px solid #eee; padding-top:8px">
+        <button class="btn" style="background:#d4380d; font-size:11px; padding:5px 10px" onclick="openDashboardBroadcast()"><i class="fas fa-tv"></i> 数据大盘播报</button>
     </div>
 </div>
 
@@ -1619,8 +1664,40 @@
                 </div>
             </div>
             <div class="d-section"><div class="d-sec-title"><i class="fas fa-balance-scale"></i> 奖惩执行</div><div class="d-reward-grid"><div class="reward-card win"><div class="r-icon">🎁</div><div class="r-content"><div class="r-title">你获得了</div><div class="r-desc">¥200 现金奖励已发放至工资账户</div></div></div><div class="reward-card lose"><div class="r-icon">☕</div><div class="r-content"><div class="r-title">对方需要</div><div class="r-desc">请你喝一周咖啡（进行中）</div></div></div></div></div>
+
+            <!-- 数据大盘播报预览 -->
+            <div class="d-section">
+                <div class="d-sec-title"><i class="fas fa-tv" style="color:#fa541c"></i> 数据大盘播报</div>
+                <div id="dashBroadcastPreview" class="broadcast-preview-inline">
+                    <div class="bp-confetti" id="bpConfetti"></div>
+                    <div class="bp-header">⚔️ PK结束播报 ⚔️</div>
+                    <div class="bp-body">
+                        <div class="bp-player bp-winner">
+                            <div class="bp-crown">👑</div>
+                            <div class="bp-avatar">李</div>
+                            <div class="bp-name">liyingping</div>
+                            <div class="bp-score">¥45,200</div>
+                            <div class="bp-badge">🏆 胜出</div>
+                        </div>
+                        <div class="bp-vs">VS</div>
+                        <div class="bp-player bp-loser">
+                            <div class="bp-avatar">张</div>
+                            <div class="bp-name">张伟</div>
+                            <div class="bp-score">¥38,800</div>
+                            <div class="bp-badge">惜败</div>
+                        </div>
+                    </div>
+                    <div class="bp-footer">
+                        <span class="bp-type">个人PK · 二月对决赛</span>
+                        <div class="bp-hint">PK结束后将自动推送到数据大盘展示</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="m-footer"><button class="btn-submit" onclick="closeModal('endDetailModal')">关闭</button></div>
+        <div class="m-footer">
+            <button class="btn-broadcast" onclick="openDashboardBroadcast()"><i class="fas fa-satellite-dish"></i> 推送到数据大盘</button>
+            <button class="btn-submit" onclick="closeModal('endDetailModal')" style="margin-left:auto">关闭</button>
+        </div>
     </div>
 </div>
 
@@ -2322,6 +2399,152 @@
             showToast('已订阅观战! PK动态将实时推送给你', 'success');
         }
     }
+
+    // ========== 数据大盘播报 ==========
+    function initBpConfetti() {
+        const container = document.getElementById('bpConfetti');
+        if (!container || container.children.length > 0) return;
+        const colors = ['#ffd700','#fa541c','#ff4d4f','#1890ff','#52c41a','#eb2f96'];
+        for (let i = 0; i < 20; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'bp-confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            piece.style.setProperty('--fall-dur', (2 + Math.random() * 3) + 's');
+            piece.style.animationDelay = Math.random() * 3 + 's';
+            container.appendChild(piece);
+        }
+    }
+    setTimeout(initBpConfetti, 500);
+
+    function openDashboardBroadcast() {
+        closeModal('endDetailModal');
+        const preview = document.getElementById('dashboardPreviewModal');
+        preview.classList.add('show');
+
+        const frame = document.getElementById('dashPreviewFrame');
+        if (frame && !frame.src.includes('yangcongxing')) {
+            frame.src = 'https://kf.yangcongxing.com/kefu-web-pc/DataMarket/?city=wh';
+        }
+
+        setTimeout(() => {
+            injectDashboardPKBroadcast();
+        }, 2500);
+    }
+
+    function closeDashboardPreview() {
+        document.getElementById('dashboardPreviewModal').classList.remove('show');
+    }
+
+    function injectDashboardPKBroadcast() {
+        const frame = document.getElementById('dashPreviewFrame');
+        if (!frame) return;
+
+        try {
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            if (!doc) throw new Error('cross-origin');
+            injectIntoDashDoc(doc);
+        } catch(e) {
+            showDashOverlayFallback();
+        }
+    }
+
+    function showDashOverlayFallback() {
+        const overlay = document.getElementById('dashBroadcastOverlayInner');
+        if (overlay) {
+            overlay.classList.add('show');
+            setupDashBroadcastSequence(overlay);
+        }
+    }
+
+    let dashBroadcastIdx = 0;
+    const dashBroadcasts = [
+        { type: '个人PK', title: '二月对决赛', winner: 'liyingping', wScore: '¥45,200', wLetter: '李', loser: '张伟', lScore: '¥38,800', lLetter: '张' },
+        { type: '小组PK', title: '小组月度对抗赛', winner: '销售一组', wScore: '112单', wLetter: '一', loser: '销售二组', lScore: '95单', lLetter: '二' },
+        { type: '团队PK', title: 'Q1冲刺团战', winner: '销售一部', wScore: '¥628,400', wLetter: '一', loser: '销售二部', lScore: '¥616,100', lLetter: '二' },
+    ];
+
+    function setupDashBroadcastSequence(container) {
+        dashBroadcastIdx = 0;
+        showNextDashBroadcast(container);
+    }
+
+    function showNextDashBroadcast(container) {
+        if (dashBroadcastIdx >= dashBroadcasts.length) {
+            setTimeout(() => {
+                container.classList.remove('show');
+                showToast('PK结果已推送到数据大盘!', 'success');
+            }, 1000);
+            return;
+        }
+        const b = dashBroadcasts[dashBroadcastIdx];
+        const confettiHTML = Array.from({length: 30}).map(() => {
+            const colors = ['#ffd700','#fa541c','#ff4d4f','#1890ff','#52c41a','#eb2f96'];
+            const c = colors[Math.floor(Math.random()*colors.length)];
+            return `<div style="position:absolute;left:${Math.random()*100}%;width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;background:${c};border-radius:${Math.random()>0.5?'50%':'2px'};animation:bpConfettiFall ${2+Math.random()*2}s linear ${Math.random()}s forwards;opacity:0.8"></div>`;
+        }).join('');
+
+        container.innerHTML = `
+            <div style="width:600px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);border:2px solid rgba(255,215,0,0.4);box-shadow:0 0 50px rgba(255,215,0,0.25),0 20px 50px rgba(0,0,0,0.5);animation:fadeIn 0.5s ease;position:relative">
+                <div style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden">${confettiHTML}</div>
+                <div style="background:linear-gradient(90deg,#d4380d,#fa541c,#d4380d);padding:14px 20px;text-align:center;font-size:20px;font-weight:900;color:#fff;letter-spacing:5px;text-shadow:0 2px 4px rgba(0,0,0,0.3)">⚔️ PK结束播报 ⚔️</div>
+                <div style="padding:28px 36px;display:flex;align-items:center;justify-content:center;gap:24px">
+                    <div style="text-align:center;min-width:150px">
+                        <div style="font-size:32px;animation:crownBounce 0.8s infinite alternate">👑</div>
+                        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#fa8c16);box-shadow:0 0 16px rgba(255,215,0,0.5);border:2px solid #ffd700;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px">${b.wLetter}</div>
+                        <div style="font-size:16px;font-weight:700;color:#fff">${b.winner}</div>
+                        <div style="font-size:22px;font-weight:900;background:linear-gradient(180deg,#ffd700,#fa8c16);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${b.wScore}</div>
+                        <div style="background:linear-gradient(90deg,#ffd700,#fa8c16);color:#fff;font-size:11px;padding:2px 10px;border-radius:10px;display:inline-block;margin-top:4px">🏆 胜出</div>
+                    </div>
+                    <div style="font-size:28px;font-weight:900;color:#fa541c;text-shadow:0 0 16px rgba(250,84,28,0.4)">VS</div>
+                    <div style="text-align:center;min-width:150px">
+                        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#8c8c8c,#595959);border:2px solid #8c8c8c;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;margin-top:40px">${b.lLetter}</div>
+                        <div style="font-size:16px;font-weight:700;color:#fff">${b.loser}</div>
+                        <div style="font-size:18px;font-weight:900;color:#8c8c8c">${b.lScore}</div>
+                        <div style="background:rgba(255,255,255,0.15);color:#bfbfbf;font-size:11px;padding:2px 10px;border-radius:10px;display:inline-block;margin-top:4px">惜败</div>
+                    </div>
+                </div>
+                <div style="text-align:center;padding:12px;background:rgba(255,255,255,0.05);border-top:1px solid rgba(255,255,255,0.1)">
+                    <span style="background:rgba(250,84,28,0.2);color:#fa541c;padding:3px 12px;border-radius:10px;font-size:12px;font-weight:600">${b.type} · ${b.title}</span>
+                    <span style="color:rgba(255,255,255,0.4);font-size:11px;margin-left:10px">${new Date().toLocaleString('zh-CN')}</span>
+                </div>
+            </div>
+        `;
+        dashBroadcastIdx++;
+        setTimeout(() => showNextDashBroadcast(container), 5500);
+    }
+
+    function replayDashBroadcast() {
+        const overlay = document.getElementById('dashBroadcastOverlayInner');
+        if (overlay) {
+            overlay.classList.add('show');
+            setupDashBroadcastSequence(overlay);
+        }
+    }
 </script>
+
+<!-- 数据大盘播报预览弹窗（全屏） -->
+<div class="dashboard-preview-modal" id="dashboardPreviewModal">
+    <div class="dash-preview-header">
+        <i class="fas fa-tv" style="color:#fa541c"></i>
+        <span style="font-weight:600">数据大盘播报预览</span>
+        <span class="dash-status" id="dashStatus">播报中</span>
+        <div style="flex:1"></div>
+        <div class="dash-preview-close" onclick="closeDashboardPreview()">&times;</div>
+    </div>
+    <div class="dash-preview-frame">
+        <iframe id="dashPreviewFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div id="dashBroadcastOverlayInner" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:10000;transition:opacity 0.4s"></div>
+        <style>
+            #dashBroadcastOverlayInner.show { display: flex !important; }
+        </style>
+    </div>
+    <div class="dash-preview-controls">
+        <button class="dash-ctrl-btn" onclick="replayDashBroadcast()"><i class="fas fa-redo"></i> 重新播报</button>
+        <button class="dash-ctrl-btn" onclick="closeDashboardPreview()"><i class="fas fa-times"></i> 关闭预览</button>
+    </div>
+</div>
+
 </body>
 </html>
